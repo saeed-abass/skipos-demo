@@ -156,6 +156,7 @@ function UserFooter() {
   const router = useRouter()
   const { showToast } = useToast()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [companyName, setCompanyName] = useState<string | null>(null)
   const [email, setEmail] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -166,14 +167,17 @@ function UserFooter() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
+      if (!user) { setLoading(false); return }
       setEmail(user.email ?? null)
       supabase
         .from('companies')
         .select('name')
         .eq('id', user.id)
         .single()
-        .then(({ data }) => { if (data?.name) setCompanyName(data.name) })
+        .then(({ data }) => {
+          if (data?.name) setCompanyName(data.name)
+          setLoading(false)
+        })
     })
   }, [])
 
@@ -204,7 +208,15 @@ function UserFooter() {
     router.push(href)
   }
 
-  const displayName = companyName ?? '…'
+  // Derive display values
+  const avatarText = companyName
+    ? initials(companyName)
+    : email
+    ? email.slice(0, 2).toUpperCase()
+    : '??'
+
+  const primaryLabel = companyName || email || ''
+  const secondaryLabel = companyName ? email : 'Admin'
 
   return (
     <div ref={containerRef} className="relative flex-shrink-0 border-t border-gray-100 p-3">
@@ -216,11 +228,11 @@ function UserFooter() {
           {/* Account header */}
           <div className="flex items-center gap-3 border-b border-gray-100 p-3">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-navy text-xs font-bold text-white">
-              {companyName ? initials(companyName) : '??'}
+              {avatarText}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-soft-text">{displayName}</p>
-              <p className="truncate text-xs text-soft-muted">{email ?? '…'}</p>
+              <p className="truncate text-sm font-semibold text-soft-text">{primaryLabel}</p>
+              <p className="truncate text-xs text-soft-muted">{secondaryLabel}</p>
             </div>
           </div>
 
@@ -262,13 +274,30 @@ function UserFooter() {
         onClick={() => setMenuOpen(v => !v)}
         className="flex w-full items-center gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50"
       >
+        {/* Avatar */}
         <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-navy text-xs font-bold text-white shadow">
-          {companyName ? initials(companyName) : '??'}
+          {loading ? (
+            <span className="h-3 w-3 animate-pulse rounded-full bg-white/40" />
+          ) : (
+            avatarText
+          )}
         </div>
+
+        {/* Labels */}
         <div className="min-w-0 flex-1 text-left">
-          <p className="truncate text-sm font-semibold text-soft-text">{displayName}</p>
-          <p className="text-xs text-soft-muted">Admin</p>
+          {loading ? (
+            <>
+              <div className="mb-1 h-3 w-24 animate-pulse rounded bg-gray-200" />
+              <div className="h-2.5 w-16 animate-pulse rounded bg-gray-100" />
+            </>
+          ) : (
+            <>
+              <p className="truncate text-sm font-semibold text-soft-text">{primaryLabel}</p>
+              <p className="truncate text-xs text-soft-muted">{secondaryLabel}</p>
+            </>
+          )}
         </div>
+
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"

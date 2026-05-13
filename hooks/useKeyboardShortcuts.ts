@@ -3,69 +3,57 @@
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
-function isInInput(): boolean {
-  const el = document.activeElement
-  return (
-    el instanceof HTMLInputElement ||
-    el instanceof HTMLTextAreaElement ||
-    el instanceof HTMLSelectElement ||
-    (el instanceof HTMLElement && el.isContentEditable)
-  )
-}
-
 export function useKeyboardShortcuts() {
   const router = useRouter()
   const firstKeyRef = useRef<string | null>(null)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    function clearFirst() {
-      firstKeyRef.current = null
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-        timerRef.current = null
-      }
-    }
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)
 
-    function handler(e: KeyboardEvent) {
+      if (isInput) return
       if (e.metaKey || e.ctrlKey || e.altKey) return
 
       const key = e.key.toLowerCase()
 
-      // '/' focuses the topbar search (single-key, no sequence)
-      if (key === '/' && !firstKeyRef.current) {
-        if (isInInput()) return
+      // Single key: / focuses search
+      if (key === '/') {
         e.preventDefault()
-        window.dispatchEvent(new CustomEvent('skipos:focus-search'))
+        const searchInput = document.querySelector('[data-search-input]') as HTMLInputElement | null
+        searchInput?.focus()
         return
       }
 
+      // Two-key sequences — first key
       if (!firstKeyRef.current) {
-        if ((key === 'n' || key === 'g') && !isInInput()) {
+        if (key === 'g' || key === 'n') {
           firstKeyRef.current = key
-          timerRef.current = setTimeout(clearFirst, 300)
+          if (timeoutRef.current) clearTimeout(timeoutRef.current)
+          timeoutRef.current = setTimeout(() => {
+            firstKeyRef.current = null
+          }, 500)
         }
         return
       }
 
-      // Second key of sequence
+      // Second key
       const combo = firstKeyRef.current + key
-      clearFirst()
+      firstKeyRef.current = null
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
 
       switch (combo) {
         case 'gd': router.push('/dashboard'); break
-        case 'gj': router.push('/jobs');      break
+        case 'gj': router.push('/jobs'); break
         case 'gc': router.push('/customers'); break
-        case 'gw': router.push('/wtns');      break
-        case 'nj': window.dispatchEvent(new CustomEvent('skipos:open-new-job'));      break
+        case 'gw': router.push('/wtns'); break
+        case 'nj': window.dispatchEvent(new CustomEvent('skipos:open-new-job')); break
         case 'nc': window.dispatchEvent(new CustomEvent('skipos:open-new-customer')); break
       }
     }
 
-    document.addEventListener('keydown', handler)
-    return () => {
-      document.removeEventListener('keydown', handler)
-      clearFirst()
-    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [router])
 }

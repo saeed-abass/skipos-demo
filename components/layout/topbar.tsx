@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useSidebar } from './sidebar'
 import { globalSearch, type SearchResults } from '@/lib/actions/search'
 import { JOB_STATUS_LABELS } from '@/types'
+import { KeyboardShortcutsModal } from '@/components/ui/KeyboardShortcutsModal'
 
 // ─────────────────────────────────────────────────────────
 // Page metadata
@@ -116,10 +117,7 @@ function SearchDropdown({
       {/* Loading */}
       {query.trim() && loading && (
         <div className="flex items-center justify-center py-8">
-          <svg className="h-5 w-5 animate-spin text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-orange-300 border-t-orange-500" />
         </div>
       )}
 
@@ -221,9 +219,9 @@ function NotificationsDropdown() {
 
       {/* Footer */}
       <div className="border-t border-gray-100 p-3 text-center">
-        <button className="text-xs text-orange-500 transition-colors hover:text-orange-600">
+        <Link href="/notifications" className="text-xs text-orange-500 transition-colors hover:text-orange-600">
           View all notifications
-        </button>
+        </Link>
       </div>
     </div>
   )
@@ -244,38 +242,12 @@ export function Topbar() {
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResults | null>(null)
   const [searchLoading, setSearchLoading] = useState(false)
-  const [userInitials, setUserInitials] = useState('??')
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false)
 
   const searchContainerRef = useRef<HTMLDivElement>(null)
   const bellContainerRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Load user initials for avatar display
-  useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
-      supabase
-        .from('companies')
-        .select('name')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => {
-          if (data?.name) {
-            const parts = (data.name as string).trim().split(/\s+/)
-            setUserInitials(
-              parts.length >= 2
-                ? (parts[0][0] + parts[1][0]).toUpperCase()
-                : (data.name as string).slice(0, 2).toUpperCase()
-            )
-          }
-        })
-    })
-  }, [])
 
   // Click outside — closes the active panel
   useEffect(() => {
@@ -363,6 +335,9 @@ export function Topbar() {
 
   return (
     <>
+      {showShortcutsModal && (
+        <KeyboardShortcutsModal onClose={() => setShowShortcutsModal(false)} />
+      )}
       <header className="mb-4 mr-4 mt-4 flex h-16 items-center justify-between rounded-card bg-white px-5 shadow-soft">
 
         {/* ── Left: hamburger + breadcrumb ──────────── */}
@@ -402,12 +377,13 @@ export function Topbar() {
               </svg>
               <input
                 ref={searchInputRef}
+                data-search-input
                 type="text"
                 value={query}
                 onChange={e => handleSearchChange(e.target.value)}
                 onFocus={() => setOpenPanel('search')}
                 onKeyDown={handleSearchKeyDown}
-                placeholder="Search… (Ctrl+/)"
+                placeholder="Search…"
                 className={cn(
                   'h-8 rounded-btn border-0 bg-gray-100 pl-8 pr-3 text-xs text-soft-text placeholder:text-soft-muted shadow-inset',
                   'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-200',
@@ -425,12 +401,25 @@ export function Topbar() {
             )}
           </div>
 
+          {/* Keyboard shortcuts */}
+          <button
+            onClick={() => setShowShortcutsModal(true)}
+            title="Keyboard shortcuts"
+            className="rounded-lg p-2.5 text-soft-muted transition-colors hover:bg-gray-100 hover:text-soft-text"
+            aria-label="Keyboard shortcuts"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+            </svg>
+          </button>
+
           {/* Notification bell */}
           <div ref={bellContainerRef} className="relative">
             <button
               onClick={() => togglePanel('bell')}
               className={cn(
-                'relative rounded-lg p-1.5 transition-colors',
+                'relative rounded-lg p-2.5 transition-colors',
                 openPanel === 'bell'
                   ? 'bg-gray-100 text-soft-text'
                   : 'text-soft-muted hover:bg-gray-100 hover:text-soft-text'
@@ -438,21 +427,13 @@ export function Topbar() {
               aria-label="Notifications"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
               </svg>
               {/* Orange dot — hidden when no notifications */}
               {/* <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-orange-500 ring-2 ring-white" /> */}
             </button>
             {openPanel === 'bell' && <NotificationsDropdown />}
-          </div>
-
-          {/* User avatar — display only */}
-          <div
-            className="flex h-9 w-9 cursor-default items-center justify-center rounded-full bg-gradient-navy text-[0.65rem] font-bold text-white shadow"
-            aria-label="Signed in user"
-          >
-            {userInitials}
           </div>
         </div>
       </header>
