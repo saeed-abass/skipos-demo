@@ -6,7 +6,7 @@ import { getJobs, updateJobStatus, type JobRow } from '@/lib/actions/jobs'
 import { JobFilters, type FilterState } from '@/components/jobs/JobFilters'
 import { JobsTable } from '@/components/jobs/JobsTable'
 import { NewJobModal } from '@/components/jobs/NewJobModal'
-import { useToasts, ToastList } from '@/components/ui/toast'
+import { useToast } from '@/components/ui/toast'
 import type { JobStatus, JobType } from '@/types'
 
 const DEMO_COMPANY_ID = 'demo-company'
@@ -24,7 +24,7 @@ const INITIAL_FILTERS: FilterState = {
 // ─────────────────────────────────────────────────────────
 
 export default function JobsPage() {
-  const { toasts, showToast } = useToasts()
+  const { showToast } = useToast()
   const [jobs, setJobs] = useState<JobRow[]>([])
   const [loading, setLoading] = useState(true)
   const [showNewJobModal, setShowNewJobModal] = useState(false)
@@ -42,11 +42,11 @@ export default function JobsPage() {
       })
       setJobs(data)
     } catch {
-      showToast('Failed to load jobs', 'error')
+      showToast({ type: 'error', title: 'Load failed', message: 'Could not load jobs' })
     } finally {
       setLoading(false)
     }
-  }, [filters])
+  }, [filters, showToast])
 
   useEffect(() => {
     loadJobs()
@@ -55,10 +55,10 @@ export default function JobsPage() {
   async function handleStatusUpdate(jobId: string, status: JobStatus) {
     try {
       await updateJobStatus(jobId, status)
-      showToast('Status updated', 'success')
+      showToast({ type: 'success', title: 'Status updated' })
       await loadJobs()
     } catch {
-      showToast('Failed to update status', 'error')
+      showToast({ type: 'error', title: 'Update failed', message: 'Could not update job status' })
     }
   }
 
@@ -106,14 +106,11 @@ export default function JobsPage() {
         open={showNewJobModal}
         companyId={DEMO_COMPANY_ID}
         onClose={() => setShowNewJobModal(false)}
-        onSuccess={jobId => {
+        onSuccess={() => {
           setShowNewJobModal(false)
-          showToast(`Job JOB-${jobId.slice(-6).toUpperCase()} created`, 'success')
           loadJobs()
         }}
       />
-
-      <ToastList toasts={toasts} />
     </PageWrapper>
   )
 }

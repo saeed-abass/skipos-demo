@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { JOB_TYPE_LABELS, SKIP_SIZE_LABELS, type JobStatus, type JobType } from '@/types'
 import { JobStatusBadge } from '@/components/jobs/JobStatusBadge'
 import { updateCustomer, type CustomerWithJobs } from '@/lib/actions/customers'
+import { useToast } from '@/components/ui/toast'
 
 // ─────────────────────────────────────────────────────────
 // Helpers
@@ -78,10 +79,10 @@ interface EditPanelProps {
   customer: CustomerWithJobs
   onCancel: () => void
   onSaved: () => void
-  showToast: (msg: string, type: 'success' | 'error') => void
 }
 
-function EditPanel({ customer, onCancel, onSaved, showToast }: EditPanelProps) {
+function EditPanel({ customer, onCancel, onSaved }: EditPanelProps) {
+  const { showToast } = useToast()
   const [form, setForm] = useState<EditForm>({
     name: customer.name,
     email: customer.email ?? '',
@@ -114,11 +115,11 @@ function EditPanel({ customer, onCancel, onSaved, showToast }: EditPanelProps) {
         postcode: form.postcode.trim().toUpperCase(),
         notes: form.notes.trim() || null,
       })
-      showToast('Customer updated', 'success')
+      showToast({ type: 'success', title: 'Customer Updated', message: 'Changes saved successfully' })
       onSaved()
     } catch (err) {
       console.error(err)
-      showToast('Failed to update customer', 'error')
+      showToast({ type: 'error', title: 'Update failed', message: 'Could not save changes' })
     } finally {
       setSaving(false)
     }
@@ -242,7 +243,6 @@ interface CustomerDetailPanelProps {
   startInEditMode?: boolean
   onClose: () => void
   onUpdated: () => void
-  showToast: (message: string, type: 'success' | 'error') => void
 }
 
 export function CustomerDetailPanel({
@@ -250,7 +250,6 @@ export function CustomerDetailPanel({
   startInEditMode = false,
   onClose,
   onUpdated,
-  showToast,
 }: CustomerDetailPanelProps) {
   const [isEditing, setIsEditing] = useState(startInEditMode)
 
@@ -320,7 +319,6 @@ export function CustomerDetailPanel({
             customer={customer}
             onCancel={() => setIsEditing(false)}
             onSaved={() => { setIsEditing(false); onUpdated() }}
-            showToast={showToast}
           />
         ) : (
           <>

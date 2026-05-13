@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { JobType, SkipSize } from '@/types'
 import {
@@ -10,6 +10,7 @@ import {
   type CustomerOption,
   type DriverOption,
 } from '@/lib/actions/jobs'
+import { useToast } from '@/components/ui/toast'
 
 // ─────────────────────────────────────────────────────────
 // Shared input / label styles
@@ -88,6 +89,37 @@ function Field({
 }
 
 // ─────────────────────────────────────────────────────────
+// Success overlay
+// ─────────────────────────────────────────────────────────
+
+function SuccessOverlay({ jobRef }: { jobRef: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-16">
+      <div className="animate-scale-in flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+        <svg
+          viewBox="0 0 52 52"
+          className="h-8 w-8 text-green-600"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M14 27 l10 10 l14-18"
+            className="animate-checkmark"
+          />
+        </svg>
+      </div>
+      <div className="text-center">
+        <p className="text-base font-semibold text-soft-text">Job Created!</p>
+        <p className="mt-1 text-sm text-soft-muted">{jobRef} has been added successfully.</p>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────
 // Modal
 // ─────────────────────────────────────────────────────────
 
@@ -95,17 +127,21 @@ interface NewJobModalProps {
   open: boolean
   companyId: string
   onClose: () => void
-  onSuccess: (jobId: string) => void
+  onSuccess: () => void
 }
 
 export function NewJobModal({ open, companyId, onClose, onSuccess }: NewJobModalProps) {
+  const { showToast } = useToast()
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
+  const [errorKey, setErrorKey] = useState(0)
   const [customers, setCustomers] = useState<CustomerOption[]>([])
   const [drivers, setDrivers] = useState<DriverOption[]>([])
   const [loadingOptions, setLoadingOptions] = useState(false)
+  const [successJobRef, setSuccessJobRef] = useState<string | null>(null)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Load customers + drivers when modal opens
   useEffect(() => {
@@ -134,6 +170,8 @@ export function NewJobModal({ open, companyId, onClose, onSuccess }: NewJobModal
       setErrors({})
       setServerError('')
       setSubmitting(false)
+      setSuccessJobRef(null)
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
     }
   }, [open])
 
@@ -177,10 +215,20 @@ export function NewJobModal({ open, companyId, onClose, onSuccess }: NewJobModal
         driver_id: form.driver_id || null,
         notes: form.notes || null,
       })
-      onSuccess(job.id)
+      const ref = `JOB-${job.id.slice(-6).toUpperCase()}`
+      setSuccessJobRef(ref)
+      showToast({
+        type: 'success',
+        title: 'Job Created',
+        message: `${ref} has been added successfully`,
+      })
+      closeTimerRef.current = setTimeout(() => {
+        onSuccess()
+      }, 1500)
     } catch (err) {
       console.error('[createJob]', err)
       setServerError('Failed to create job. Please try again.')
+      setErrorKey(k => k + 1)
     } finally {
       setSubmitting(false)
     }
@@ -211,168 +259,177 @@ export function NewJobModal({ open, companyId, onClose, onSuccess }: NewJobModal
           </div>
 
           {/* ── Body ───────────────────────────────────── */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {successJobRef ? (
+            <SuccessOverlay jobRef={successJobRef} />
+          ) : (
+            <div className="p-6">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
-              {/* Job Type — full width */}
-              <Field label="Job Type" error={errors.job_type} className="sm:col-span-2">
-                <select
-                  value={form.job_type}
-                  onChange={e => set('job_type', e.target.value)}
-                  className={cn(inputClass, errors.job_type && errorInputClass)}
-                >
-                  <option value="">Select job type…</option>
-                  <option value="DELIVERY">Delivery</option>
-                  <option value="COLLECTION">Collection</option>
-                  <option value="EXCHANGE">Exchange</option>
-                  <option value="WAIT_AND_LOAD">Wait &amp; Load</option>
-                </select>
-              </Field>
+                {/* Job Type — full width */}
+                <Field label="Job Type" error={errors.job_type} className="sm:col-span-2">
+                  <select
+                    value={form.job_type}
+                    onChange={e => set('job_type', e.target.value)}
+                    className={cn(inputClass, errors.job_type && errorInputClass)}
+                  >
+                    <option value="">Select job type…</option>
+                    <option value="DELIVERY">Delivery</option>
+                    <option value="COLLECTION">Collection</option>
+                    <option value="EXCHANGE">Exchange</option>
+                    <option value="WAIT_AND_LOAD">Wait &amp; Load</option>
+                  </select>
+                </Field>
 
-              {/* Skip Size */}
-              <Field label="Skip Size" error={errors.skip_size}>
-                <select
-                  value={form.skip_size}
-                  onChange={e => set('skip_size', e.target.value)}
-                  className={cn(inputClass, errors.skip_size && errorInputClass)}
-                >
-                  <option value="">Select size…</option>
-                  <option value="TWO_YARD">2 Yard</option>
-                  <option value="FOUR_YARD">4 Yard</option>
-                  <option value="SIX_YARD">6 Yard</option>
-                  <option value="EIGHT_YARD">8 Yard</option>
-                  <option value="TWELVE_YARD">12 Yard</option>
-                  <option value="FOURTEEN_YARD">14 Yard</option>
-                  <option value="SIXTEEN_YARD">16 Yard</option>
-                  <option value="TWENTY_YARD">20 Yard</option>
-                </select>
-              </Field>
+                {/* Skip Size */}
+                <Field label="Skip Size" error={errors.skip_size}>
+                  <select
+                    value={form.skip_size}
+                    onChange={e => set('skip_size', e.target.value)}
+                    className={cn(inputClass, errors.skip_size && errorInputClass)}
+                  >
+                    <option value="">Select size…</option>
+                    <option value="TWO_YARD">2 Yard</option>
+                    <option value="FOUR_YARD">4 Yard</option>
+                    <option value="SIX_YARD">6 Yard</option>
+                    <option value="EIGHT_YARD">8 Yard</option>
+                    <option value="TWELVE_YARD">12 Yard</option>
+                    <option value="FOURTEEN_YARD">14 Yard</option>
+                    <option value="SIXTEEN_YARD">16 Yard</option>
+                    <option value="TWENTY_YARD">20 Yard</option>
+                  </select>
+                </Field>
 
-              {/* Scheduled Date */}
-              <Field label="Scheduled Date">
-                <input
-                  type="date"
-                  value={form.scheduled_date}
-                  onChange={e => set('scheduled_date', e.target.value)}
-                  className={inputClass}
-                />
-              </Field>
+                {/* Scheduled Date */}
+                <Field label="Scheduled Date">
+                  <input
+                    type="date"
+                    value={form.scheduled_date}
+                    onChange={e => set('scheduled_date', e.target.value)}
+                    className={inputClass}
+                  />
+                </Field>
 
-              {/* Customer — full width */}
-              <Field label="Customer" error={errors.customer_id} className="sm:col-span-2">
-                {loadingOptions ? (
-                  <div className={cn(inputClass, 'flex items-center gap-2 text-soft-muted')}>
-                    <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Loading customers…
-                  </div>
-                ) : (
-                  <>
-                    <select
-                      value={form.customer_id}
-                      onChange={e => handleCustomerChange(e.target.value)}
-                      className={cn(inputClass, errors.customer_id && errorInputClass)}
-                    >
-                      <option value="">Select a customer…</option>
-                      {customers.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}{c.phone ? ` — ${c.phone}` : ''}
-                        </option>
-                      ))}
-                    </select>
-                    {customers.length === 0 && (
-                      <p className="mt-1.5 text-xs text-soft-muted">
-                        No customers yet.{' '}
-                        <a href="/customers" className="font-semibold text-orange-500 hover:text-orange-600">
-                          Add a customer →
-                        </a>
-                      </p>
-                    )}
-                  </>
-                )}
-              </Field>
+                {/* Customer — full width */}
+                <Field label="Customer" error={errors.customer_id} className="sm:col-span-2">
+                  {loadingOptions ? (
+                    <div className={cn(inputClass, 'flex items-center gap-2 text-soft-muted')}>
+                      <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Loading customers…
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        value={form.customer_id}
+                        onChange={e => handleCustomerChange(e.target.value)}
+                        className={cn(inputClass, errors.customer_id && errorInputClass)}
+                      >
+                        <option value="">Select a customer…</option>
+                        {customers.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}{c.phone ? ` — ${c.phone}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {customers.length === 0 && (
+                        <p className="mt-1.5 text-xs text-soft-muted">
+                          No customers yet.{' '}
+                          <a href="/customers" className="font-semibold text-orange-500 hover:text-orange-600">
+                            Add a customer →
+                          </a>
+                        </p>
+                      )}
+                    </>
+                  )}
+                </Field>
 
-              {/* Delivery Address — full width */}
-              <Field label="Delivery Address" error={errors.delivery_address} className="sm:col-span-2">
-                <textarea
-                  rows={2}
-                  value={form.delivery_address}
-                  onChange={e => set('delivery_address', e.target.value)}
-                  placeholder="Full delivery address"
-                  className={cn(inputClass, 'resize-none', errors.delivery_address && errorInputClass)}
-                />
-              </Field>
+                {/* Delivery Address — full width */}
+                <Field label="Delivery Address" error={errors.delivery_address} className="sm:col-span-2">
+                  <textarea
+                    rows={2}
+                    value={form.delivery_address}
+                    onChange={e => set('delivery_address', e.target.value)}
+                    placeholder="Full delivery address"
+                    className={cn(inputClass, 'resize-none', errors.delivery_address && errorInputClass)}
+                  />
+                </Field>
 
-              {/* Delivery Postcode */}
-              <Field label="Postcode" error={errors.delivery_postcode}>
-                <input
-                  type="text"
-                  value={form.delivery_postcode}
-                  onChange={e => set('delivery_postcode', e.target.value.toUpperCase())}
-                  placeholder="e.g. SW1A 1AA"
-                  className={cn(inputClass, errors.delivery_postcode && errorInputClass)}
-                />
-              </Field>
+                {/* Delivery Postcode */}
+                <Field label="Postcode" error={errors.delivery_postcode}>
+                  <input
+                    type="text"
+                    value={form.delivery_postcode}
+                    onChange={e => set('delivery_postcode', e.target.value.toUpperCase())}
+                    placeholder="e.g. SW1A 1AA"
+                    className={cn(inputClass, errors.delivery_postcode && errorInputClass)}
+                  />
+                </Field>
 
-              {/* Driver */}
-              <Field label="Assign Driver (optional)">
-                <select
-                  value={form.driver_id}
-                  onChange={e => set('driver_id', e.target.value)}
-                  className={inputClass}
-                  disabled={loadingOptions}
-                >
-                  <option value="">Unassigned</option>
-                  {drivers.map(d => (
-                    <option key={d.id} value={d.id}>{d.full_name}</option>
-                  ))}
-                </select>
-              </Field>
+                {/* Driver */}
+                <Field label="Assign Driver (optional)">
+                  <select
+                    value={form.driver_id}
+                    onChange={e => set('driver_id', e.target.value)}
+                    className={inputClass}
+                    disabled={loadingOptions}
+                  >
+                    <option value="">Unassigned</option>
+                    {drivers.map(d => (
+                      <option key={d.id} value={d.id}>{d.full_name}</option>
+                    ))}
+                  </select>
+                </Field>
 
-              {/* Notes — full width */}
-              <Field label="Notes (optional)" className="sm:col-span-2">
-                <textarea
-                  rows={2}
-                  value={form.notes}
-                  onChange={e => set('notes', e.target.value)}
-                  placeholder="Any special instructions…"
-                  className={cn(inputClass, 'resize-none')}
-                />
-              </Field>
-            </div>
-
-            {serverError && (
-              <div className="mt-4 rounded-btn bg-red-50 px-4 py-3 text-sm text-red-600">
-                {serverError}
+                {/* Notes — full width */}
+                <Field label="Notes (optional)" className="sm:col-span-2">
+                  <textarea
+                    rows={2}
+                    value={form.notes}
+                    onChange={e => set('notes', e.target.value)}
+                    placeholder="Any special instructions…"
+                    className={cn(inputClass, 'resize-none')}
+                  />
+                </Field>
               </div>
-            )}
-          </div>
+
+              {serverError && (
+                <div
+                  key={errorKey}
+                  className="animate-shake mt-4 rounded-btn bg-red-50 px-4 py-3 text-sm text-red-600"
+                >
+                  {serverError}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ── Footer ─────────────────────────────────── */}
-          <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
-            <button
-              onClick={onClose}
-              disabled={submitting}
-              className="inline-flex items-center justify-center gap-2 rounded-btn border border-gray-200 bg-white px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-soft-text shadow-soft hover:bg-gray-50 disabled:opacity-50 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="inline-flex items-center justify-center gap-2 rounded-btn bg-gradient-orange px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md disabled:opacity-70 transition-all"
-            >
-              {submitting && (
-                <svg className="h-3.5 w-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-              )}
-              {submitting ? 'Creating…' : 'Create Job'}
-            </button>
-          </div>
+          {!successJobRef && (
+            <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+              <button
+                onClick={onClose}
+                disabled={submitting}
+                className="inline-flex items-center justify-center gap-2 rounded-btn border border-gray-200 bg-white px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-soft-text shadow-soft hover:bg-gray-50 disabled:opacity-50 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="inline-flex items-center justify-center gap-2 rounded-btn bg-gradient-orange px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md disabled:opacity-70 transition-all"
+              >
+                {submitting && (
+                  <svg className="h-3.5 w-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                )}
+                {submitting ? 'Creating…' : 'Create Job'}
+              </button>
+            </div>
+          )}
 
         </div>
       </div>

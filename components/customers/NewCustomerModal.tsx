@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { createCustomer } from '@/lib/actions/customers'
+import { useToast } from '@/components/ui/toast'
 
 const inputClass =
   'w-full rounded-btn border border-gray-200 bg-white px-3 py-2.5 text-sm text-soft-text ' +
@@ -32,12 +33,46 @@ function validate(form: FormState): FormErrors {
   return e
 }
 
+// ─────────────────────────────────────────────────────────
+// Success overlay
+// ─────────────────────────────────────────────────────────
+
+function SuccessOverlay({ name }: { name: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-14">
+      <div className="animate-scale-in flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+        <svg
+          viewBox="0 0 52 52"
+          className="h-8 w-8 text-green-600"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M14 27 l10 10 l14-18"
+            className="animate-checkmark"
+          />
+        </svg>
+      </div>
+      <div className="text-center">
+        <p className="text-base font-semibold text-soft-text">Customer Added!</p>
+        <p className="mt-1 text-sm text-soft-muted">{name} has been added to your account.</p>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────
+// Modal
+// ─────────────────────────────────────────────────────────
+
 interface NewCustomerModalProps {
   open: boolean
   companyId: string
   onClose: () => void
   onSuccess: () => void
-  showToast: (message: string, type: 'success' | 'error') => void
 }
 
 export function NewCustomerModal({
@@ -45,12 +80,15 @@ export function NewCustomerModal({
   companyId,
   onClose,
   onSuccess,
-  showToast,
 }: NewCustomerModalProps) {
+  const { showToast } = useToast()
   const [form, setForm] = useState<FormState>(INITIAL)
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
+  const [errorKey, setErrorKey] = useState(0)
+  const [successName, setSuccessName] = useState<string | null>(null)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!open) {
@@ -58,6 +96,8 @@ export function NewCustomerModal({
       setErrors({})
       setServerError('')
       setSubmitting(false)
+      setSuccessName(null)
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
     }
   }, [open])
 
@@ -84,11 +124,20 @@ export function NewCustomerModal({
         postcode: form.postcode.trim().toUpperCase() || null,
         notes: form.notes.trim() || null,
       })
-      showToast('Customer added successfully', 'success')
-      onSuccess()
+      const name = form.name.trim()
+      setSuccessName(name)
+      showToast({
+        type: 'success',
+        title: 'Customer Added',
+        message: `${name} has been added to your account`,
+      })
+      closeTimerRef.current = setTimeout(() => {
+        onSuccess()
+      }, 1500)
     } catch (err) {
       console.error('[createCustomer]', err)
       setServerError('Failed to add customer. Please try again.')
+      setErrorKey(k => k + 1)
     } finally {
       setSubmitting(false)
     }
@@ -119,112 +168,115 @@ export function NewCustomerModal({
           </div>
 
           {/* Body */}
-          <div className="space-y-4 p-6">
+          {successName ? (
+            <SuccessOverlay name={successName} />
+          ) : (
+            <div className="space-y-4 p-6">
 
-            {/* Name */}
-            <div>
-              <label className={labelClass}>Name *</label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={e => set('name', e.target.value)}
-                placeholder="e.g. Smith Construction Ltd"
-                className={cn(inputClass, errors.name && errorInputClass)}
-              />
-              {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className={labelClass}>Phone</label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={e => set('phone', e.target.value)}
-                placeholder="e.g. 07700 900123"
-                className={inputClass}
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className={labelClass}>Email</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={e => set('email', e.target.value)}
-                placeholder="e.g. jobs@smithconstruction.co.uk"
-                className={inputClass}
-              />
-            </div>
-
-            {/* Address */}
-            <div>
-              <label className={labelClass}>Address *</label>
-              <textarea
-                rows={3}
-                value={form.address}
-                onChange={e => set('address', e.target.value)}
-                placeholder="Full address including street and town"
-                className={cn(inputClass, 'resize-none', errors.address && errorInputClass)}
-              />
-              {errors.address && <p className="mt-1 text-xs text-red-500">{errors.address}</p>}
-            </div>
-
-            {/* Postcode */}
-            <div className="w-1/2">
-              <label className={labelClass}>Postcode</label>
-              <input
-                type="text"
-                value={form.postcode}
-                onChange={e => set('postcode', e.target.value.toUpperCase())}
-                placeholder="e.g. BD1 1AA"
-                className={inputClass}
-              />
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label className={labelClass}>Notes</label>
-              <textarea
-                rows={2}
-                value={form.notes}
-                onChange={e => set('notes', e.target.value)}
-                placeholder="Any notes about this customer…"
-                className={cn(inputClass, 'resize-none')}
-              />
-            </div>
-
-            {serverError && (
-              <div className="rounded-btn bg-red-50 px-4 py-3 text-sm text-red-600">
-                {serverError}
+              <div>
+                <label className={labelClass}>Name *</label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={e => set('name', e.target.value)}
+                  placeholder="e.g. Smith Construction Ltd"
+                  className={cn(inputClass, errors.name && errorInputClass)}
+                />
+                {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
               </div>
-            )}
-          </div>
+
+              <div>
+                <label className={labelClass}>Phone</label>
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={e => set('phone', e.target.value)}
+                  placeholder="e.g. 07700 900123"
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>Email</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={e => set('email', e.target.value)}
+                  placeholder="e.g. jobs@smithconstruction.co.uk"
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>Address *</label>
+                <textarea
+                  rows={3}
+                  value={form.address}
+                  onChange={e => set('address', e.target.value)}
+                  placeholder="Full address including street and town"
+                  className={cn(inputClass, 'resize-none', errors.address && errorInputClass)}
+                />
+                {errors.address && <p className="mt-1 text-xs text-red-500">{errors.address}</p>}
+              </div>
+
+              <div className="w-1/2">
+                <label className={labelClass}>Postcode</label>
+                <input
+                  type="text"
+                  value={form.postcode}
+                  onChange={e => set('postcode', e.target.value.toUpperCase())}
+                  placeholder="e.g. BD1 1AA"
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>Notes</label>
+                <textarea
+                  rows={2}
+                  value={form.notes}
+                  onChange={e => set('notes', e.target.value)}
+                  placeholder="Any notes about this customer…"
+                  className={cn(inputClass, 'resize-none')}
+                />
+              </div>
+
+              {serverError && (
+                <div
+                  key={errorKey}
+                  className="animate-shake rounded-btn bg-red-50 px-4 py-3 text-sm text-red-600"
+                >
+                  {serverError}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
-            <button
-              onClick={onClose}
-              disabled={submitting}
-              className="inline-flex items-center justify-center rounded-btn border border-gray-200 bg-white px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-soft-text shadow-soft hover:bg-gray-50 disabled:opacity-50 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="inline-flex items-center justify-center gap-2 rounded-btn bg-gradient-orange px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md disabled:opacity-70 transition-all"
-            >
-              {submitting && (
-                <svg className="h-3.5 w-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-              )}
-              {submitting ? 'Adding…' : 'Add Customer'}
-            </button>
-          </div>
+          {!successName && (
+            <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+              <button
+                onClick={onClose}
+                disabled={submitting}
+                className="inline-flex items-center justify-center rounded-btn border border-gray-200 bg-white px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-soft-text shadow-soft hover:bg-gray-50 disabled:opacity-50 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="inline-flex items-center justify-center gap-2 rounded-btn bg-gradient-orange px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md disabled:opacity-70 transition-all"
+              >
+                {submitting && (
+                  <svg className="h-3.5 w-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                )}
+                {submitting ? 'Adding…' : 'Add Customer'}
+              </button>
+            </div>
+          )}
 
         </div>
       </div>

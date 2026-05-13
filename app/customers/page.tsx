@@ -10,7 +10,7 @@ import {
   type CustomerWithJobCount,
   type CustomerWithJobs,
 } from '@/lib/actions/customers'
-import { useToasts, ToastList } from '@/components/ui/toast'
+import { useToast } from '@/components/ui/toast'
 import { CustomerFilters } from '@/components/customers/CustomerFilters'
 import { CustomersTable } from '@/components/customers/CustomersTable'
 import { NewCustomerModal } from '@/components/customers/NewCustomerModal'
@@ -19,7 +19,7 @@ import { CustomerDetailPanel } from '@/components/customers/CustomerDetailPanel'
 const DEMO_COMPANY_ID = 'demo-company'
 
 export default function CustomersPage() {
-  const { toasts, showToast } = useToasts()
+  const { showToast } = useToast()
 
   const [customers, setCustomers] = useState<CustomerWithJobCount[]>([])
   const [loading, setLoading] = useState(true)
@@ -80,14 +80,14 @@ export default function CustomersPage() {
   async function handleDelete(customerId: string) {
     try {
       await deleteCustomer(customerId)
-      showToast('Customer deleted', 'success')
+      showToast({ type: 'success', title: 'Customer deleted' })
       if (selectedId === customerId) closePanel()
       await loadCustomers()
     } catch (err) {
       if (err instanceof Error && err.message === 'Customer has active jobs') {
-        showToast('Cannot delete: customer has active jobs', 'error')
+        showToast({ type: 'error', title: 'Cannot delete', message: 'Customer has active jobs' })
       } else {
-        showToast('Failed to delete customer', 'error')
+        showToast({ type: 'error', title: 'Delete failed', message: 'Could not delete customer' })
       }
     }
   }
@@ -149,7 +149,6 @@ export default function CustomersPage() {
               startInEditMode={startInEditMode}
               onClose={closePanel}
               onUpdated={handleUpdated}
-              showToast={showToast}
             />
           </div>
         </div>
@@ -164,10 +163,7 @@ export default function CustomersPage() {
           setShowNewModal(false)
           loadCustomers()
         }}
-        showToast={showToast}
       />
-
-      <ToastList toasts={toasts} />
     </PageWrapper>
   )
 }

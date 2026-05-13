@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { SidebarProvider, Sidebar } from '@/components/layout/sidebar'
 import { Topbar } from '@/components/layout/topbar'
+import { ToastProvider } from '@/components/ui/toast'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -27,13 +28,15 @@ export default function RootLayout({
         the sidebar's right edge (250px wide + 1rem left gap + 1rem right gap).
       */}
       <body className={`${inter.className} bg-soft-bg antialiased`}>
-        <SidebarProvider>
-          <Sidebar />
-          <div className="ml-[274px] min-h-screen">
-            <Topbar />
-            <main>{children}</main>
-          </div>
-        </SidebarProvider>
+        <ToastProvider>
+          <SidebarProvider>
+            <Sidebar />
+            <div className="ml-[274px] min-h-screen">
+              <Topbar />
+              <main>{children}</main>
+            </div>
+          </SidebarProvider>
+        </ToastProvider>
       </body>
     </html>
   )
