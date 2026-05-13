@@ -7,23 +7,24 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean
 }
 
+// Soft UI button style: small, uppercase, bold, gradient backgrounds
 const variantClasses: Record<NonNullable<ButtonProps['variant']>, string> = {
   primary:
-    'bg-orange-500 text-white hover:bg-orange-600 focus-visible:ring-orange-500',
+    'bg-gradient-orange text-white shadow-soft hover:shadow-md active:opacity-90',
   secondary:
-    'bg-navy text-white hover:bg-navy-light focus-visible:ring-navy',
+    'bg-white border border-gray-200 text-soft-text hover:bg-gray-50 shadow-soft active:opacity-90',
   danger:
-    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500',
+    'bg-gradient-danger text-white shadow-soft hover:shadow-md active:opacity-90',
   ghost:
-    'bg-transparent text-slate-600 hover:bg-slate-100 focus-visible:ring-slate-400',
+    'bg-transparent text-soft-muted hover:bg-gray-100 hover:text-soft-text',
   outline:
-    'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:ring-slate-400',
+    'border-2 border-orange-500 text-orange-500 hover:bg-gradient-orange hover:text-white hover:border-transparent active:opacity-90',
 }
 
 const sizeClasses: Record<NonNullable<ButtonProps['size']>, string> = {
-  sm: 'h-8 px-3 text-xs',
-  md: 'h-9 px-4 text-sm',
-  lg: 'h-11 px-6 text-base',
+  sm: 'h-8 px-4 text-[0.65rem]',
+  md: 'h-9 px-6 text-[0.75rem]',
+  lg: 'h-11 px-8 text-[0.8rem]',
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -44,8 +45,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
-          'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+          // Soft UI base: small caps, bold, tight tracking
+          'inline-flex items-center justify-center gap-2 rounded-btn',
+          'font-bold uppercase tracking-[0.025em]',
+          'transition-all duration-200',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-400',
           'disabled:pointer-events-none disabled:opacity-50',
           variantClasses[variant],
           sizeClasses[size],
@@ -55,24 +59,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading && (
           <svg
-            className="h-4 w-4 animate-spin"
+            className="h-3.5 w-3.5 animate-spin"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         )}
         {children}

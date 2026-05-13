@@ -1,5 +1,7 @@
 import { cn } from '@/lib/utils'
 
+// Soft UI table — white card wrapper, no outer border, airy separators
+
 export function Table({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={cn('w-full overflow-x-auto', className)}>
@@ -9,11 +11,15 @@ export function Table({ children, className }: { children: React.ReactNode; clas
 }
 
 export function TableHead({ children }: { children: React.ReactNode }) {
-  return <thead className="border-b border-slate-200 bg-slate-50">{children}</thead>
+  return (
+    <thead className="bg-gray-50/80">
+      {children}
+    </thead>
+  )
 }
 
 export function TableBody({ children }: { children: React.ReactNode }) {
-  return <tbody className="divide-y divide-slate-100">{children}</tbody>
+  return <tbody>{children}</tbody>
 }
 
 export function TableRow({
@@ -29,8 +35,8 @@ export function TableRow({
     <tr
       onClick={onClick}
       className={cn(
-        'transition-colors',
-        onClick && 'cursor-pointer hover:bg-slate-50',
+        'border-b border-gray-50 transition-colors',
+        onClick && 'cursor-pointer hover:bg-gray-50/50',
         className
       )}
     >
@@ -49,7 +55,7 @@ export function TableHeader({
   return (
     <th
       className={cn(
-        'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500',
+        'px-6 py-3 text-left text-[0.65rem] font-bold uppercase tracking-widest text-soft-muted',
         className
       )}
     >
@@ -66,7 +72,9 @@ export function TableCell({
   className?: string
 }) {
   return (
-    <td className={cn('px-4 py-3 text-slate-700', className)}>{children}</td>
+    <td className={cn('px-6 py-4 text-sm text-soft-text', className)}>
+      {children}
+    </td>
   )
 }
 
@@ -79,10 +87,7 @@ export function EmptyTableRow({
 }) {
   return (
     <tr>
-      <td
-        colSpan={colSpan}
-        className="px-4 py-12 text-center text-sm text-slate-400"
-      >
+      <td colSpan={colSpan} className="px-6 py-16 text-center text-sm text-soft-muted">
         {message}
       </td>
     </tr>

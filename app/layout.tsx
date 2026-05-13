@@ -21,19 +21,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-[#F8FAFC] text-[#0F172A] antialiased`}>
+      {/*
+        Sidebar is fixed (floats at left-4 top-4 bottom-4 on desktop).
+        Main content offsets itself with lg:ml-[calc(250px+2rem)] to clear
+        the sidebar's right edge (250px wide + 1rem left gap + 1rem right gap).
+      */}
+      <body className={`${inter.className} bg-soft-bg antialiased`}>
         <SidebarProvider>
-          <div className="flex h-screen overflow-hidden">
-            {/* Sidebar — fixed on mobile, in-flow on desktop */}
-            <Sidebar />
-
-            {/* Main content column */}
-            <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
-              <Topbar />
-              <main className="flex-1 overflow-y-auto">
-                {children}
-              </main>
-            </div>
+          <Sidebar />
+          <div className="ml-[274px] min-h-screen">
+            <Topbar />
+            <main>{children}</main>
           </div>
         </SidebarProvider>
       </body>

@@ -1,5 +1,9 @@
 import { cn } from '@/lib/utils'
 
+// ─────────────────────────────────────────────────────────
+// Base card primitives
+// ─────────────────────────────────────────────────────────
+
 interface CardProps {
   children: React.ReactNode
   className?: string
@@ -7,12 +11,7 @@ interface CardProps {
 
 export function Card({ children, className }: CardProps) {
   return (
-    <div
-      className={cn(
-        'rounded-xl border border-slate-200 bg-white shadow-sm',
-        className
-      )}
-    >
+    <div className={cn('bg-white rounded-card shadow-soft', className)}>
       {children}
     </div>
   )
@@ -27,11 +26,11 @@ interface CardHeaderProps {
 
 export function CardHeader({ title, description, action, className }: CardHeaderProps) {
   return (
-    <div className={cn('flex items-start justify-between px-6 py-4 border-b border-slate-100', className)}>
+    <div className={cn('flex items-center justify-between px-6 py-4 border-b border-gray-100', className)}>
       <div>
-        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-soft-text">{title}</h3>
         {description && (
-          <p className="mt-0.5 text-sm text-slate-500">{description}</p>
+          <p className="mt-0.5 text-xs text-soft-muted">{description}</p>
         )}
       </div>
       {action && <div className="ml-4 flex-shrink-0">{action}</div>}
@@ -45,46 +44,82 @@ export function CardContent({ children, className }: CardProps) {
 
 export function CardFooter({ children, className }: CardProps) {
   return (
-    <div
-      className={cn(
-        'flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-3',
-        className
-      )}
-    >
+    <div className={cn('flex items-center justify-end gap-2 border-t border-gray-100 px-6 py-3', className)}>
       {children}
     </div>
   )
 }
 
-// Stat card — used on the dashboard
+// ─────────────────────────────────────────────────────────
+// StatCard — Soft UI floating-icon design
+// The icon box protrudes 1.5rem above the card top edge.
+// Parent grid/container must have pt-6 to make room for it.
+// ─────────────────────────────────────────────────────────
+
+type IconGradient = 'orange' | 'navy' | 'info' | 'success'
+
 interface StatCardProps {
-  label: string
+  title: string
   value: string | number
-  delta?: string
-  deltaType?: 'positive' | 'negative' | 'neutral'
-  icon?: React.ReactNode
+  change?: string
+  changeType?: 'up' | 'down' | 'neutral'
+  icon: React.ReactNode
+  iconGradient?: IconGradient
 }
 
-export function StatCard({ label, value, delta, deltaType = 'neutral', icon }: StatCardProps) {
-  const deltaColour =
-    deltaType === 'positive'
-      ? 'text-green-600'
-      : deltaType === 'negative'
-      ? 'text-red-600'
-      : 'text-slate-500'
+const iconGradientClass: Record<IconGradient, string> = {
+  orange:  'bg-gradient-orange',
+  navy:    'bg-gradient-navy',
+  info:    'bg-gradient-info',
+  success: 'bg-gradient-success',
+}
 
+export function StatCard({
+  title,
+  value,
+  change,
+  changeType = 'neutral',
+  icon,
+  iconGradient = 'orange',
+}: StatCardProps) {
   return (
-    <Card className="flex items-start gap-4 p-5">
-      {icon && (
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-500">
-          {icon}
-        </div>
-      )}
-      <div>
-        <p className="text-sm text-slate-500">{label}</p>
-        <p className="mt-0.5 text-2xl font-bold text-slate-900">{value}</p>
-        {delta && <p className={cn('mt-1 text-xs font-medium', deltaColour)}>{delta}</p>}
+    <div className="relative bg-white rounded-card shadow-soft overflow-visible">
+      {/* Floating icon box — protrudes above the card */}
+      <div
+        className={cn(
+          'absolute -top-6 left-4 flex h-16 w-16 items-center justify-center rounded-xl text-white shadow-lg',
+          iconGradientClass[iconGradient]
+        )}
+      >
+        {icon}
       </div>
-    </Card>
+
+      {/* Stat values — right-aligned, with top padding to clear the icon area */}
+      <div className="px-4 pt-4 pb-2 text-right">
+        <p className="text-[0.65rem] font-bold uppercase tracking-widest text-soft-muted">
+          {title}
+        </p>
+        <h3 className="mt-0.5 text-2xl font-bold text-soft-text">{value}</h3>
+      </div>
+
+      {/* Footer row */}
+      <div className="flex items-center gap-1.5 border-t border-gray-100 px-4 py-2.5">
+        {change && (
+          <span
+            className={cn(
+              'text-xs font-semibold',
+              changeType === 'up'
+                ? 'text-green-500'
+                : changeType === 'down'
+                ? 'text-red-500'
+                : 'text-soft-muted'
+            )}
+          >
+            {change}
+          </span>
+        )}
+        <span className="text-xs text-soft-muted">Since last month</span>
+      </div>
+    </div>
   )
 }

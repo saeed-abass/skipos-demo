@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  background-color: #f0f2f5;
+}
+
+/* Gradient shorthand aliases — use bg-gradient-* (Tailwind) in components
+   These are kept here per design spec for direct CSS usage if needed */
+@layer utilities {
+  .gradient-navy    { background: linear-gradient(195deg, #42424a, #191919); }
+  .gradient-orange  { background: linear-gradient(195deg, #f97316, #ea580c); }
+  .gradient-info    { background: linear-gradient(195deg, #49a3f1, #1a73e8); }
+  .gradient-success { background: linear-gradient(195deg, #66bb6a, #43a047); }
+}
