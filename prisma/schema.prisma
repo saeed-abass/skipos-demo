@@ -10,62 +10,64 @@ datasource db {
 
 // ─────────────────────────────────────────────────────────
 // Enums
+// TypeScript names are UPPER_CASE; DB values are snake_case
 // ─────────────────────────────────────────────────────────
 
 enum Role {
-  ADMIN
-  OFFICE
-  DRIVER
+  ADMIN  @map("admin")
+  OFFICE @map("office")
+  DRIVER @map("driver")
 }
 
 enum JobType {
-  DELIVERY
-  COLLECTION
-  EXCHANGE
-  WAIT_AND_LOAD
+  DELIVERY      @map("delivery")
+  COLLECTION    @map("collection")
+  EXCHANGE      @map("exchange")
+  WAIT_AND_LOAD @map("wait_and_load")
 }
 
 enum JobStatus {
-  PENDING
-  SCHEDULED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
+  PENDING     @map("pending")
+  SCHEDULED   @map("scheduled")
+  IN_PROGRESS @map("in_progress")
+  COMPLETED   @map("completed")
+  CANCELLED   @map("cancelled")
 }
 
 enum SkipSize {
-  TWO_YARD
-  FOUR_YARD
-  SIX_YARD
-  EIGHT_YARD
-  TWELVE_YARD
-  FOURTEEN_YARD
-  SIXTEEN_YARD
-  TWENTY_YARD
+  TWO_YARD      @map("two_yard")
+  FOUR_YARD     @map("four_yard")
+  SIX_YARD      @map("six_yard")
+  EIGHT_YARD    @map("eight_yard")
+  TWELVE_YARD   @map("twelve_yard")
+  FOURTEEN_YARD @map("fourteen_yard")
+  SIXTEEN_YARD  @map("sixteen_yard")
+  TWENTY_YARD   @map("twenty_yard")
 }
 
 enum WTNStatus {
-  DRAFT
-  SIGNED
-  SUBMITTED
-  ACCEPTED
-  REJECTED
+  DRAFT     @map("draft")
+  SIGNED    @map("signed")
+  SUBMITTED @map("submitted")
+  ACCEPTED  @map("accepted")
+  REJECTED  @map("rejected")
 }
 
 enum Condition {
-  GOOD
-  FAIR
-  POOR
+  GOOD @map("good")
+  FAIR @map("fair")
+  POOR @map("poor")
 }
 
 enum SkipStatus {
-  IN_YARD
-  ON_SITE
-  AT_TIP
+  IN_YARD @map("in_yard")
+  ON_SITE @map("on_site")
+  AT_TIP  @map("at_tip")
 }
 
 // ─────────────────────────────────────────────────────────
 // Models
+// PascalCase in TypeScript; snake_case tables in PostgreSQL
 // ─────────────────────────────────────────────────────────
 
 model Company {
@@ -86,6 +88,8 @@ model Company {
   jobs               Job[]
   wtns               WasteTransferNote[]
   skips              Skip[]
+
+  @@map("companies")
 }
 
 model User {
@@ -99,6 +103,8 @@ model User {
   created_at DateTime  @default(now())
 
   jobs       Job[]     @relation("DriverJobs")
+
+  @@map("users")
 }
 
 model Customer {
@@ -115,6 +121,8 @@ model Customer {
   updated_at DateTime  @updatedAt
 
   jobs       Job[]
+
+  @@map("customers")
 }
 
 model Job {
@@ -142,6 +150,8 @@ model Job {
   updated_at          DateTime    @updatedAt
 
   wtn                 WasteTransferNote?
+
+  @@map("jobs")
 }
 
 model WasteTransferNote {
@@ -171,6 +181,8 @@ model WasteTransferNote {
   defra_submitted_at    DateTime?
   created_at            DateTime    @default(now())
   updated_at            DateTime    @updatedAt
+
+  @@map("waste_transfer_notes")
 }
 
 model Skip {
@@ -188,4 +200,5 @@ model Skip {
   jobs        Job[]
 
   @@unique([company_id, skip_number])
+  @@map("skips")
 }
