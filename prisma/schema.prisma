@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  OFFICE
+  DRIVER
+}
+
+enum JobType {
+  DELIVERY
+  COLLECTION
+  EXCHANGE
+  WAIT_AND_LOAD
+}
+
+enum JobStatus {
+  PENDING
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum SkipSize {
+  TWO_YARD
+  FOUR_YARD
+  SIX_YARD
+  EIGHT_YARD
+  TWELVE_YARD
+  FOURTEEN_YARD
+  SIXTEEN_YARD
+  TWENTY_YARD
+}
+
+enum WTNStatus {
+  DRAFT
+  SIGNED
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+}
+
+enum Condition {
+  GOOD
+  FAIR
+  POOR
+}
+
+enum SkipStatus {
+  IN_YARD
+  ON_SITE
+  AT_TIP
+}
+
+// ─────────────────────────────────────────────────────────
+// Models
+// ─────────────────────────────────────────────────────────
+
+model Company {
+  id                 String    @id @default(cuid())
+  name               String
+  company_number     String?
+  ea_registration    String?
+  address            String
+  postcode           String
+  phone              String
+  email              String
+  logo_url           String?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  users              User[]
+  customers          Customer[]
+  jobs               Job[]
+  wtns               WasteTransferNote[]
+  skips              Skip[]
+}
+
+model User {
+  id         String    @id @default(cuid())
+  company_id String
+  company    Company   @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  email      String    @unique
+  full_name  String
+  role       Role      @default(OFFICE)
+  avatar_url String?
+  created_at DateTime  @default(now())
+
+  jobs       Job[]     @relation("DriverJobs")
+}
+
+model Customer {
+  id         String    @id @default(cuid())
+  company_id String
+  company    Company   @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  name       String
+  phone      String
+  email      String?
+  address    String
+  postcode   String
+  notes      String?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  jobs       Job[]
+}
+
+model Job {
+  id                  String      @id @default(cuid())
+  company_id          String
+  company             Company     @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  customer_id         String
+  customer            Customer    @relation(fields: [customer_id], references: [id])
+  driver_id           String?
+  driver              User?       @relation("DriverJobs", fields: [driver_id], references: [id])
+  skip_id             String?
+  skip                Skip?       @relation(fields: [skip_id], references: [id])
+  job_type            JobType
+  status              JobStatus   @default(PENDING)
+  skip_size           SkipSize
+  delivery_address    String
+  delivery_postcode   String
+  scheduled_date      DateTime?
+  scheduled_time_slot String?
+  permit_required     Boolean     @default(false)
+  permit_number       String?
+  price               Decimal?
+  notes               String?
+  created_at          DateTime    @default(now())
+  updated_at          DateTime    @updatedAt
+
+  wtn                 WasteTransferNote?
+}
+
+model WasteTransferNote {
+  id                    String      @id @default(cuid())
+  company_id            String
+  company               Company     @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  job_id                String      @unique
+  job                   Job         @relation(fields: [job_id], references: [id])
+  wtn_number            String      @unique
+  waste_description     String
+  ewc_code              String
+  quantity_kg           Decimal?
+  container_type        String      @default("Skip")
+  collection_address    String
+  collection_postcode   String
+  disposal_site_name    String?
+  disposal_site_address String?
+  carrier_name          String
+  carrier_ea_number     String
+  consignee_name        String?
+  consignee_address     String?
+  transfer_date         DateTime
+  status                WTNStatus   @default(DRAFT)
+  customer_signature    String?
+  customer_signed_at    DateTime?
+  defra_submission_id   String?
+  defra_submitted_at    DateTime?
+  created_at            DateTime    @default(now())
+  updated_at            DateTime    @updatedAt
+}
+
+model Skip {
+  id          String      @id @default(cuid())
+  company_id  String
+  company     Company     @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  skip_number String
+  size        SkipSize
+  condition   Condition   @default(GOOD)
+  status      SkipStatus  @default(IN_YARD)
+  notes       String?
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+
+  jobs        Job[]
+
+  @@unique([company_id, skip_number])
+}
