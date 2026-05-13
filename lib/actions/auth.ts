@@ -11,7 +11,7 @@ export async function signUp(data: {
   phone?: string
   address: string
   postcode: string
-}): Promise<{ error?: string }> {
+}): Promise<{ error?: string; success?: true }> {
   const supabase = await createClient()
 
   const { data: authData, error } = await supabase.auth.signUp({
@@ -52,7 +52,7 @@ export async function signUp(data: {
     return { error: 'Failed to set up your account. Please try again.' }
   }
 
-  return {}
+  return { success: true }
 }
 
 export async function signIn(data: {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { signUp } from '@/lib/actions/auth'
@@ -57,29 +58,6 @@ function EyeToggle({ show, onToggle }: { show: boolean; onToggle: () => void }) 
   )
 }
 
-function SuccessCard() {
-  return (
-    <div className="w-full max-w-md">
-      <div className="rounded-card bg-white p-8 shadow-soft-md text-center">
-        <div className="mx-auto mb-4 animate-scale-in flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-          <svg viewBox="0 0 52 52" className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" strokeWidth="4">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14 27 l10 10 l14-18" className="animate-checkmark" />
-          </svg>
-        </div>
-        <h2 className="text-xl font-bold text-soft-text">Account created!</h2>
-        <p className="mt-2 text-sm text-soft-muted leading-relaxed">
-          Check your email to confirm your account, then sign in.
-        </p>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex items-center justify-center w-full rounded-btn bg-gradient-orange py-2 text-sm font-bold text-white shadow-soft hover:shadow-md transition-all"
-        >
-          Go to Sign In
-        </Link>
-      </div>
-    </div>
-  )
-}
 
 type FormState = {
   companyName: string
@@ -116,6 +94,7 @@ function validate(form: FormState): FormErrors {
 }
 
 export default function SignupPage() {
+  const router = useRouter()
   const [form, setForm] = useState<FormState>(INITIAL)
   const [errors, setErrors] = useState<FormErrors>({})
   const [showPassword, setShowPassword] = useState(false)
@@ -123,7 +102,6 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState('')
   const [errorKey, setErrorKey] = useState(0)
-  const [success, setSuccess] = useState(false)
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -152,11 +130,9 @@ export default function SignupPage() {
       setErrorKey(k => k + 1)
       setLoading(false)
     } else {
-      setSuccess(true)
+      router.push('/dashboard')
     }
   }
-
-  if (success) return <SuccessCard />
 
   return (
     <div className="w-full max-w-xl">
