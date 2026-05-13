@@ -172,7 +172,7 @@ function UserFooter() {
       supabase
         .from('companies')
         .select('name')
-        .eq('id', user.id)
+        .eq('email', user.email)
         .single()
         .then(({ data }) => {
           if (data?.name) setCompanyName(data.name)
@@ -209,13 +209,19 @@ function UserFooter() {
   }
 
   // Derive display values
+  function emailFallbackName(e: string): string {
+    const local = e.split('@')[0]
+    const first = local.split('.')[0]
+    return first.charAt(0).toUpperCase() + first.slice(1)
+  }
+
   const avatarText = companyName
     ? initials(companyName)
     : email
     ? email.slice(0, 2).toUpperCase()
     : '??'
 
-  const primaryLabel = companyName || email || ''
+  const primaryLabel = companyName || (email ? emailFallbackName(email) : '')
   const secondaryLabel = companyName ? email : 'Admin'
 
   return (

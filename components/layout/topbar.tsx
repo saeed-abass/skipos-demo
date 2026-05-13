@@ -14,13 +14,14 @@ import { KeyboardShortcutsModal } from '@/components/ui/KeyboardShortcutsModal'
 // ─────────────────────────────────────────────────────────
 
 const PAGE_META: Record<string, { title: string; section: string }> = {
-  '/dashboard': { title: 'Dashboard',            section: 'Pages' },
-  '/jobs':      { title: 'Jobs',                 section: 'Operations' },
-  '/wtns':      { title: 'Waste Transfer Notes', section: 'Operations' },
-  '/drivers':   { title: 'Drivers',              section: 'Operations' },
-  '/customers': { title: 'Customers',            section: 'Management' },
-  '/fleet':     { title: 'Fleet',                section: 'Management' },
-  '/settings':  { title: 'Settings',             section: 'Management' },
+  '/dashboard':     { title: 'Dashboard',            section: 'Pages' },
+  '/notifications': { title: 'Notifications',        section: 'Pages' },
+  '/jobs':          { title: 'Jobs',                 section: 'Operations' },
+  '/wtns':          { title: 'Waste Transfer Notes', section: 'Operations' },
+  '/drivers':       { title: 'Drivers',              section: 'Operations' },
+  '/customers':     { title: 'Customers',            section: 'Management' },
+  '/fleet':         { title: 'Fleet',                section: 'Management' },
+  '/settings':      { title: 'Settings',             section: 'Management' },
 }
 
 function getPageMeta(pathname: string) {
