@@ -7,7 +7,7 @@ const PROTECTED_PREFIXES = [
   '/dashboard',
   '/jobs',
   '/wtns',
-  '/drivers',
+  '/team',
   '/customers',
   '/fleet',
   '/settings',

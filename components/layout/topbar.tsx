@@ -18,7 +18,7 @@ const PAGE_META: Record<string, { title: string; section: string }> = {
   '/notifications': { title: 'Notifications',        section: 'Pages' },
   '/jobs':          { title: 'Jobs',                 section: 'Operations' },
   '/wtns':          { title: 'Waste Transfer Notes', section: 'Operations' },
-  '/drivers':       { title: 'Drivers',              section: 'Operations' },
+  '/team':          { title: 'Team',                 section: 'Operations' },
   '/customers':     { title: 'Customers',            section: 'Management' },
   '/fleet':         { title: 'Fleet',                section: 'Management' },
   '/settings':      { title: 'Settings',             section: 'Management' },
