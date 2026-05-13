@@ -165,3 +165,33 @@ export type CreateWTNInput = Omit<WasteTransferNote,
   | 'defra_submission_id'
   | 'defra_submitted_at'
 >
+
+// ─────────────────────────────────────────────────────────
+// Display label maps
+// ─────────────────────────────────────────────────────────
+
+export const JOB_TYPE_LABELS: Record<JobType, string> = {
+  DELIVERY: 'Delivery',
+  COLLECTION: 'Collection',
+  EXCHANGE: 'Exchange',
+  WAIT_AND_LOAD: 'Wait & Load',
+}
+
+export const SKIP_SIZE_LABELS: Record<SkipSize, string> = {
+  TWO_YARD: '2 Yard',
+  FOUR_YARD: '4 Yard',
+  SIX_YARD: '6 Yard',
+  EIGHT_YARD: '8 Yard',
+  TWELVE_YARD: '12 Yard',
+  FOURTEEN_YARD: '14 Yard',
+  SIXTEEN_YARD: '16 Yard',
+  TWENTY_YARD: '20 Yard',
+}
+
+export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+  PENDING: 'Pending',
+  SCHEDULED: 'Scheduled',
+  IN_PROGRESS: 'In Progress',
+  COMPLETED: 'Completed',
+  CANCELLED: 'Cancelled',
+}
