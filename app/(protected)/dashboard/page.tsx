@@ -122,7 +122,7 @@ export default function DashboardPage() {
               <TableBody>
                 <EmptyTableRow
                   colSpan={6}
-                  message="No jobs yet — create your first job"
+                  message="No jobs yet. Create your first job to get started."
                 />
               </TableBody>
             </Table>

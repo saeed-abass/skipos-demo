@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]): string {
 
 // UK date format: 14/05/2024
 export function formatDate(date: Date | string | null | undefined): string {
-  if (!date) return '—'
+  if (!date) return 'Not set'
   return new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: '2-digit',
@@ -17,7 +17,7 @@ export function formatDate(date: Date | string | null | undefined): string {
 
 // UK date + time: 14/05/2024 at 09:30
 export function formatDateTime(date: Date | string | null | undefined): string {
-  if (!date) return '—'
+  if (!date) return 'Not set'
   return new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: '2-digit',
@@ -29,7 +29,7 @@ export function formatDateTime(date: Date | string | null | undefined): string {
 
 // UK pounds: £1,250.00
 export function formatCurrency(amount: number | null | undefined): string {
-  if (amount == null) return '—'
+  if (amount == null) return 'Not set'
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: 'GBP',

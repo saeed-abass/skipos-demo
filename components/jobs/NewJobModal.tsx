@@ -125,12 +125,11 @@ function SuccessOverlay({ jobRef }: { jobRef: string }) {
 
 interface NewJobModalProps {
   open: boolean
-  companyId: string
   onClose: () => void
   onSuccess: () => void
 }
 
-export function NewJobModal({ open, companyId, onClose, onSuccess }: NewJobModalProps) {
+export function NewJobModal({ open, onClose, onSuccess }: NewJobModalProps) {
   const { showToast } = useToast()
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [errors, setErrors] = useState<FormErrors>({})
@@ -149,8 +148,8 @@ export function NewJobModal({ open, companyId, onClose, onSuccess }: NewJobModal
     let cancelled = false
     setLoadingOptions(true)
     Promise.all([
-      getCustomersForCompany(companyId),
-      getDriversForCompany(companyId),
+      getCustomersForCompany(),
+      getDriversForCompany(),
     ])
       .then(([c, d]) => {
         if (!cancelled) {
@@ -161,7 +160,7 @@ export function NewJobModal({ open, companyId, onClose, onSuccess }: NewJobModal
       .catch(err => console.error('[NewJobModal] load options', err))
       .finally(() => { if (!cancelled) setLoadingOptions(false) })
     return () => { cancelled = true }
-  }, [open, companyId])
+  }, [open])
 
   // Reset form when modal closes
   useEffect(() => {
@@ -205,7 +204,6 @@ export function NewJobModal({ open, companyId, onClose, onSuccess }: NewJobModal
 
     try {
       const job = await createJob({
-        company_id: companyId,
         customer_id: form.customer_id,
         job_type: form.job_type as JobType,
         skip_size: form.skip_size as SkipSize,
@@ -329,7 +327,7 @@ export function NewJobModal({ open, companyId, onClose, onSuccess }: NewJobModal
                         <option value="">Select a customer…</option>
                         {customers.map(c => (
                           <option key={c.id} value={c.id}>
-                            {c.name}{c.phone ? ` — ${c.phone}` : ''}
+                            {c.name}{c.phone ? ` (${c.phone})` : ''}
                           </option>
                         ))}
                       </select>

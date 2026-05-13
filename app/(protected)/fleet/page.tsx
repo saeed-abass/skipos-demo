@@ -9,7 +9,7 @@ export default function FleetPage() {
     <PageWrapper>
       <PageHeader
         title="Fleet"
-        description="Track your skip inventory — in yard, on site, and at tip."
+        description="Track your skip inventory: in yard, on site, and at tip."
         action={<Button size="sm">+ Add Skip</Button>}
       />
       <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-400">

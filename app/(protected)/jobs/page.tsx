@@ -9,8 +9,6 @@ import { NewJobModal } from '@/components/jobs/NewJobModal'
 import { useToast } from '@/components/ui/toast'
 import type { JobStatus, JobType } from '@/types'
 
-const DEMO_COMPANY_ID = 'demo-company'
-
 const INITIAL_FILTERS: FilterState = {
   status: '',
   jobType: '',
@@ -33,7 +31,7 @@ export default function JobsPage() {
   const loadJobs = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await getJobs(DEMO_COMPANY_ID, {
+      const data = await getJobs({
         status: (filters.status as JobStatus) || undefined,
         jobType: (filters.jobType as JobType) || undefined,
         search: filters.search || undefined,
@@ -104,7 +102,6 @@ export default function JobsPage() {
       {/* ── New job modal ────────────────────────────── */}
       <NewJobModal
         open={showNewJobModal}
-        companyId={DEMO_COMPANY_ID}
         onClose={() => setShowNewJobModal(false)}
         onSuccess={() => {
           setShowNewJobModal(false)

@@ -70,14 +70,12 @@ function SuccessOverlay({ name }: { name: string }) {
 
 interface NewCustomerModalProps {
   open: boolean
-  companyId: string
   onClose: () => void
   onSuccess: () => void
 }
 
 export function NewCustomerModal({
   open,
-  companyId,
   onClose,
   onSuccess,
 }: NewCustomerModalProps) {
@@ -116,7 +114,6 @@ export function NewCustomerModal({
     setServerError('')
     try {
       await createCustomer({
-        company_id: companyId,
         name: form.name.trim(),
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,

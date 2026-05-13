@@ -16,8 +16,6 @@ import { CustomersTable } from '@/components/customers/CustomersTable'
 import { NewCustomerModal } from '@/components/customers/NewCustomerModal'
 import { CustomerDetailPanel } from '@/components/customers/CustomerDetailPanel'
 
-const DEMO_COMPANY_ID = 'demo-company'
-
 export default function CustomersPage() {
   const { showToast } = useToast()
 
@@ -42,7 +40,7 @@ export default function CustomersPage() {
   const loadCustomers = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await getCustomers(DEMO_COMPANY_ID, debouncedSearch || undefined)
+      const data = await getCustomers(debouncedSearch || undefined)
       setCustomers(data)
     } finally {
       setLoading(false)
@@ -157,7 +155,6 @@ export default function CustomersPage() {
       {/* New customer modal */}
       <NewCustomerModal
         open={showNewModal}
-        companyId={DEMO_COMPANY_ID}
         onClose={() => setShowNewModal(false)}
         onSuccess={() => {
           setShowNewModal(false)

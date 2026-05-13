@@ -1,19 +1,25 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { createClient } from '@/lib/supabase/server'
 import type { JobStatus, JobType, SkipSize } from '@/types'
 
-export async function getJobs(
-  companyId: string,
-  filters?: {
-    status?: JobStatus
-    jobType?: JobType
-    search?: string
-    dateFrom?: string
-    dateTo?: string
-  }
-) {
+async function getCompanyId(): Promise<string> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+  return user.id
+}
+
+export async function getJobs(filters?: {
+  status?: JobStatus
+  jobType?: JobType
+  search?: string
+  dateFrom?: string
+  dateTo?: string
+}) {
   try {
+    const companyId = await getCompanyId()
     return await prisma.job.findMany({
       where: {
         company_id: companyId,
@@ -57,7 +63,6 @@ export async function getJobs(
 }
 
 export async function createJob(data: {
-  company_id: string
   customer_id: string
   job_type: JobType
   skip_size: SkipSize
@@ -67,9 +72,10 @@ export async function createJob(data: {
   driver_id?: string | null
   notes?: string | null
 }) {
+  const companyId = await getCompanyId()
   return prisma.job.create({
     data: {
-      company_id: data.company_id,
+      company_id: companyId,
       customer_id: data.customer_id,
       job_type: data.job_type,
       skip_size: data.skip_size,
@@ -85,15 +91,17 @@ export async function createJob(data: {
 }
 
 export async function updateJobStatus(jobId: string, status: JobStatus) {
+  const companyId = await getCompanyId()
   return prisma.job.update({
-    where: { id: jobId },
+    where: { id: jobId, company_id: companyId },
     data: { status },
     select: { id: true, status: true },
   })
 }
 
-export async function getCustomersForCompany(companyId: string) {
+export async function getCustomersForCompany() {
   try {
+    const companyId = await getCompanyId()
     return await prisma.customer.findMany({
       where: { company_id: companyId },
       select: { id: true, name: true, phone: true, address: true, postcode: true },
@@ -105,8 +113,9 @@ export async function getCustomersForCompany(companyId: string) {
   }
 }
 
-export async function getDriversForCompany(companyId: string) {
+export async function getDriversForCompany() {
   try {
+    const companyId = await getCompanyId()
     return await prisma.user.findMany({
       where: { company_id: companyId, role: 'DRIVER' },
       select: { id: true, full_name: true },

@@ -330,7 +330,7 @@ export function CustomerDetailPanel({
               <div>
                 <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-soft-muted">Postcode</p>
                 <p className={cn('mt-0.5 text-sm', customer.postcode ? 'text-soft-text' : 'italic text-soft-muted')}>
-                  {customer.postcode ?? '—'}
+                  {customer.postcode ?? 'Not set'}
                 </p>
               </div>
             </div>

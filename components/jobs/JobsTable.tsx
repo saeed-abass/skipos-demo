@@ -244,7 +244,7 @@ export function JobsTable({ jobs, loading, onNewJob, onStatusUpdate }: JobsTable
                         <p className="text-xs text-soft-muted">{job.customer.phone}</p>
                       </div>
                     ) : (
-                      <span className="text-soft-muted">—</span>
+                      <span className="text-soft-muted">No customer</span>
                     )}
                   </td>
 

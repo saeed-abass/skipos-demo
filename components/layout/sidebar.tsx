@@ -3,15 +3,18 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 import { cn } from '@/lib/utils'
+import { signOut } from '@/lib/actions/auth'
 
 // ─────────────────────────────────────────────────────────
-// Context — shared state between Sidebar and Topbar
+// Context
 // ─────────────────────────────────────────────────────────
 
 interface SidebarCtx {
@@ -46,7 +49,7 @@ export function useSidebar() {
 }
 
 // ─────────────────────────────────────────────────────────
-// Icons (Heroicons 24-outline)
+// Icons
 // ─────────────────────────────────────────────────────────
 
 function NavIcon({ d }: { d: string }) {
@@ -110,9 +113,70 @@ const navSections = [
 ]
 
 // ─────────────────────────────────────────────────────────
-// Sidebar component
-// Desktop: fixed, floating (left-4 top-4 bottom-4), white card
-// Mobile: fixed, full-height overlay, slides in from left
+// User footer
+// ─────────────────────────────────────────────────────────
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return name.slice(0, 2).toUpperCase()
+}
+
+function UserFooter() {
+  const router = useRouter()
+  const [companyName, setCompanyName] = useState<string | null>(null)
+  const [signingOut, setSigningOut] = useState(false)
+
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase
+        .from('companies')
+        .select('name')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.name) setCompanyName(data.name)
+        })
+    })
+  }, [])
+
+  async function handleSignOut() {
+    setSigningOut(true)
+    await signOut()
+    router.push('/login')
+  }
+
+  const displayName = companyName ?? '…'
+
+  return (
+    <div className="flex-shrink-0 border-t border-gray-100 p-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-navy text-xs font-bold text-white shadow">
+          {companyName ? initials(companyName) : '??'}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-soft-text">{displayName}</p>
+          <p className="text-xs text-soft-muted">Admin</p>
+        </div>
+      </div>
+      <button
+        onClick={handleSignOut}
+        disabled={signingOut}
+        className="mt-3 w-full text-left text-xs text-soft-muted hover:text-red-400 transition-colors disabled:opacity-50"
+      >
+        {signingOut ? 'Signing out…' : 'Sign out'}
+      </button>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────
+// Sidebar
 // ─────────────────────────────────────────────────────────
 
 export function Sidebar() {
@@ -132,13 +196,9 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          // Desktop: fixed left-4 top-4 bottom-4 w-[250px] rounded-card shadow-soft-md bg-white z-40 overflow-hidden flex flex-col
           'fixed w-[250px] bg-white z-40 overflow-hidden flex flex-col',
-          // Mobile: full-height, flush to edge, no rounding
           'top-0 bottom-0 left-0',
-          // Desktop: floating card with gap from viewport edges
           'lg:left-4 lg:top-4 lg:bottom-4 lg:rounded-card lg:shadow-soft-md',
-          // Slide animation (mobile open/close)
           'transition-transform duration-200 ease-in-out',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0',
@@ -175,12 +235,10 @@ export function Sidebar() {
         <nav className="flex-1 overflow-y-auto py-2">
           {navSections.map((section) => (
             <div key={section.label}>
-              {/* Section header */}
               <p className="mx-4 mt-4 mb-1 text-[0.65rem] font-bold uppercase tracking-widest text-soft-muted">
                 {section.label}
               </p>
 
-              {/* Nav items */}
               {section.items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + '/')
                 return (
@@ -205,18 +263,8 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* ── User / company footer ─────────────────── */}
-        <div className="flex-shrink-0 border-t border-gray-100 p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-navy text-xs font-bold text-white shadow">
-              AC
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-soft-text">Acme Skip Hire</p>
-              <p className="text-xs text-soft-muted">Admin</p>
-            </div>
-          </div>
-        </div>
+        {/* ── User footer ───────────────────────────── */}
+        <UserFooter />
       </aside>
     </>
   )

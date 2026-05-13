@@ -243,13 +243,13 @@ export function CustomersTable({
 
                     {/* Phone */}
                     <td className="px-6 py-4 text-soft-muted">
-                      {customer.phone ?? '—'}
+                      {customer.phone ?? 'No phone'}
                     </td>
 
                     {/* Email */}
                     <td className="px-6 py-4">
                       <span className="block max-w-[200px] truncate text-soft-muted">
-                        {customer.email ?? '—'}
+                        {customer.email ?? 'No email'}
                       </span>
                     </td>
 

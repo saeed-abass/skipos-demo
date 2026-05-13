@@ -1,9 +1,18 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { createClient } from '@/lib/supabase/server'
 
-export async function getCustomers(companyId: string, search?: string) {
+async function getCompanyId(): Promise<string> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+  return user.id
+}
+
+export async function getCustomers(search?: string) {
   try {
+    const companyId = await getCompanyId()
     return await prisma.customer.findMany({
       where: {
         company_id: companyId,
@@ -29,8 +38,9 @@ export async function getCustomers(companyId: string, search?: string) {
 
 export async function getCustomerById(id: string) {
   try {
+    const companyId = await getCompanyId()
     return await prisma.customer.findUnique({
-      where: { id },
+      where: { id, company_id: companyId },
       include: {
         jobs: {
           select: {
@@ -53,7 +63,6 @@ export async function getCustomerById(id: string) {
 }
 
 export async function createCustomer(data: {
-  company_id: string
   name: string
   email?: string | null
   phone?: string | null
@@ -61,11 +70,11 @@ export async function createCustomer(data: {
   postcode?: string | null
   notes?: string | null
 }) {
+  const companyId = await getCompanyId()
   return prisma.customer.create({
     data: {
-      company_id: data.company_id,
+      company_id: companyId,
       name: data.name,
-      // phone and postcode are non-nullable in the schema; use '' when not provided
       phone: data.phone?.trim() || '',
       email: data.email?.trim() || null,
       address: data.address,
@@ -80,27 +89,30 @@ export async function updateCustomer(
   data: {
     name: string
     email: string | null
-    phone: string        // non-nullable in schema
+    phone: string
     address: string
-    postcode: string     // non-nullable in schema
+    postcode: string
     notes: string | null
   }
 ) {
+  const companyId = await getCompanyId()
   return prisma.customer.update({
-    where: { id },
+    where: { id, company_id: companyId },
     data,
   })
 }
 
 export async function deleteCustomer(id: string): Promise<void> {
+  const companyId = await getCompanyId()
   const activeCount = await prisma.job.count({
     where: {
       customer_id: id,
+      company_id: companyId,
       status: { in: ['PENDING', 'SCHEDULED', 'IN_PROGRESS'] },
     },
   })
   if (activeCount > 0) throw new Error('Customer has active jobs')
-  await prisma.customer.delete({ where: { id } })
+  await prisma.customer.delete({ where: { id, company_id: companyId } })
 }
 
 export type CustomerWithJobCount = Awaited<ReturnType<typeof getCustomers>>[number]

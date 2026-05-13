@@ -3,6 +3,19 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 type CookieToSet = { name: string; value: string; options?: Record<string, unknown> }
 
+const PROTECTED_PREFIXES = [
+  '/dashboard',
+  '/jobs',
+  '/wtns',
+  '/drivers',
+  '/customers',
+  '/fleet',
+  '/settings',
+  '/onboarding',
+]
+
+const AUTH_ONLY_PATHS = ['/login', '/signup']
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -27,13 +40,23 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Refresh session — do not remove this await
+  // Always call getUser() to refresh the session cookie
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Redirect unauthenticated users away from protected routes
-  if (!user && !request.nextUrl.pathname.startsWith('/auth')) {
+  const { pathname } = request.nextUrl
+
+  const isProtected = PROTECTED_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
+  const isAuthOnly = AUTH_ONLY_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
+
+  if (!user && isProtected) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  if (user && isAuthOnly) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
