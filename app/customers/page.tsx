@@ -1,20 +1,173 @@
-import type { Metadata } from 'next'
-import { PageWrapper, PageHeader } from '@/components/layout/page-wrapper'
-import { Button } from '@/components/ui/button'
+'use client'
 
-export const metadata: Metadata = { title: 'Customers' }
+import { useCallback, useEffect, useState } from 'react'
+import { cn } from '@/lib/utils'
+import { PageWrapper } from '@/components/layout/page-wrapper'
+import {
+  getCustomers,
+  getCustomerById,
+  deleteCustomer,
+  type CustomerWithJobCount,
+  type CustomerWithJobs,
+} from '@/lib/actions/customers'
+import { useToasts, ToastList } from '@/components/ui/toast'
+import { CustomerFilters } from '@/components/customers/CustomerFilters'
+import { CustomersTable } from '@/components/customers/CustomersTable'
+import { NewCustomerModal } from '@/components/customers/NewCustomerModal'
+import { CustomerDetailPanel } from '@/components/customers/CustomerDetailPanel'
+
+const DEMO_COMPANY_ID = 'demo-company'
 
 export default function CustomersPage() {
+  const { toasts, showToast } = useToasts()
+
+  const [customers, setCustomers] = useState<CustomerWithJobCount[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchInput, setSearchInput] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [showNewModal, setShowNewModal] = useState(false)
+
+  // Detail panel
+  const [showPanel, setShowPanel] = useState(false)
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithJobs | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [startInEditMode, setStartInEditMode] = useState(false)
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchInput), 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  const loadCustomers = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await getCustomers(DEMO_COMPANY_ID, debouncedSearch || undefined)
+      setCustomers(data)
+    } finally {
+      setLoading(false)
+    }
+  }, [debouncedSearch])
+
+  useEffect(() => {
+    loadCustomers()
+  }, [loadCustomers])
+
+  async function openPanel(customerId: string, editMode = false) {
+    setSelectedId(customerId)
+    setStartInEditMode(editMode)
+    setShowPanel(true)
+    setSelectedCustomer(null)
+    const customer = await getCustomerById(customerId)
+    setSelectedCustomer(customer)
+  }
+
+  function closePanel() {
+    setShowPanel(false)
+    setSelectedId(null)
+    setSelectedCustomer(null)
+    setStartInEditMode(false)
+  }
+
+  async function handleUpdated() {
+    await loadCustomers()
+    if (selectedId) {
+      const updated = await getCustomerById(selectedId)
+      setSelectedCustomer(updated)
+    }
+  }
+
+  async function handleDelete(customerId: string) {
+    try {
+      await deleteCustomer(customerId)
+      showToast('Customer deleted', 'success')
+      if (selectedId === customerId) closePanel()
+      await loadCustomers()
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Customer has active jobs') {
+        showToast('Cannot delete: customer has active jobs', 'error')
+      } else {
+        showToast('Failed to delete customer', 'error')
+      }
+    }
+  }
+
   return (
     <PageWrapper>
-      <PageHeader
-        title="Customers"
-        description="View and manage your customer accounts."
-        action={<Button size="sm">+ Add Customer</Button>}
-      />
-      <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-400">
-        Customer list coming soon
+      {/* Page header */}
+      <div className="mb-4 flex items-start justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-soft-text">Customers</h2>
+          <p className="mt-0.5 text-sm text-soft-muted">
+            {loading ? (
+              <span className="inline-block h-4 w-24 animate-pulse rounded bg-gray-200" />
+            ) : (
+              `${customers.length} customer${customers.length !== 1 ? 's' : ''}`
+            )}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowNewModal(true)}
+          className="inline-flex items-center justify-center gap-1.5 rounded-btn bg-gradient-orange px-4 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md transition-all"
+        >
+          + New Customer
+        </button>
       </div>
+
+      {/* Search */}
+      <CustomerFilters
+        search={searchInput}
+        onChange={setSearchInput}
+        totalResults={customers.length}
+      />
+
+      {/* Table + panel */}
+      <div className="mt-4 flex items-start gap-4">
+        {/* Table — shrinks when panel is open */}
+        <div className="min-w-0 flex-1">
+          <CustomersTable
+            customers={customers}
+            loading={loading}
+            selectedId={selectedId}
+            onRowClick={id => openPanel(id)}
+            onEdit={id => openPanel(id, true)}
+            onDelete={handleDelete}
+            onNew={() => setShowNewModal(true)}
+          />
+        </div>
+
+        {/* Slide-in detail panel */}
+        <div
+          className={cn(
+            'flex-shrink-0 overflow-hidden transition-[width,opacity] duration-300 ease-in-out',
+            showPanel ? 'w-[360px] opacity-100' : 'w-0 opacity-0 pointer-events-none'
+          )}
+        >
+          <div className="w-[360px]">
+            <CustomerDetailPanel
+              customer={selectedCustomer}
+              startInEditMode={startInEditMode}
+              onClose={closePanel}
+              onUpdated={handleUpdated}
+              showToast={showToast}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* New customer modal */}
+      <NewCustomerModal
+        open={showNewModal}
+        companyId={DEMO_COMPANY_ID}
+        onClose={() => setShowNewModal(false)}
+        onSuccess={() => {
+          setShowNewModal(false)
+          loadCustomers()
+        }}
+        showToast={showToast}
+      />
+
+      <ToastList toasts={toasts} />
     </PageWrapper>
   )
 }
