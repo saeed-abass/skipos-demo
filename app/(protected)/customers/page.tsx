@@ -37,6 +37,12 @@ export default function CustomersPage() {
     return () => clearTimeout(timer)
   }, [searchInput])
 
+  useEffect(() => {
+    function handler() { setShowNewModal(true) }
+    window.addEventListener('skipos:open-new-customer', handler)
+    return () => window.removeEventListener('skipos:open-new-customer', handler)
+  }, [])
+
   const loadCustomers = useCallback(async () => {
     setLoading(true)
     try {

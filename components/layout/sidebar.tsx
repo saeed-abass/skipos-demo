@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -12,6 +13,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/lib/actions/auth'
+import { useToast } from '@/components/ui/toast'
 
 // ─────────────────────────────────────────────────────────
 // Context
@@ -68,6 +70,22 @@ function NavIcon({ d }: { d: string }) {
   )
 }
 
+function MenuIcon({ d, className }: { d: string; className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className={cn('h-4 w-4 flex-shrink-0', className)}
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+    </svg>
+  )
+}
+
 const ICONS = {
   dashboard:
     'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25A2.25 2.25 0 0113.5 8.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z',
@@ -81,6 +99,14 @@ const ICONS = {
     'M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12',
   settings:
     'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+  // Account menu icons
+  cog: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+  userPlus:
+    'M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z',
+  creditCard:
+    'M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z',
+  logout:
+    'M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9',
 }
 
 // ─────────────────────────────────────────────────────────
@@ -97,9 +123,9 @@ const navSections = [
   {
     label: 'Operations',
     items: [
-      { label: 'Jobs',    href: '/jobs',    icon: ICONS.jobs },
-      { label: 'WTNs',   href: '/wtns',    icon: ICONS.wtns },
-      { label: 'Drivers',href: '/drivers', icon: ICONS.drivers },
+      { label: 'Jobs',     href: '/jobs',     icon: ICONS.jobs },
+      { label: 'WTNs',    href: '/wtns',     icon: ICONS.wtns },
+      { label: 'Drivers', href: '/drivers',  icon: ICONS.drivers },
     ],
   },
   {
@@ -113,7 +139,7 @@ const navSections = [
 ]
 
 // ─────────────────────────────────────────────────────────
-// User footer
+// Helpers
 // ─────────────────────────────────────────────────────────
 
 function initials(name: string): string {
@@ -122,10 +148,17 @@ function initials(name: string): string {
   return name.slice(0, 2).toUpperCase()
 }
 
+// ─────────────────────────────────────────────────────────
+// User / account footer
+// ─────────────────────────────────────────────────────────
+
 function UserFooter() {
   const router = useRouter()
+  const { showToast } = useToast()
+  const [menuOpen, setMenuOpen] = useState(false)
   const [companyName, setCompanyName] = useState<string | null>(null)
-  const [signingOut, setSigningOut] = useState(false)
+  const [email, setEmail] = useState<string | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -134,42 +167,122 @@ function UserFooter() {
     )
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
+      setEmail(user.email ?? null)
       supabase
         .from('companies')
         .select('name')
         .eq('id', user.id)
         .single()
-        .then(({ data }) => {
-          if (data?.name) setCompanyName(data.name)
-        })
+        .then(({ data }) => { if (data?.name) setCompanyName(data.name) })
     })
   }, [])
 
-  async function handleSignOut() {
-    setSigningOut(true)
-    await signOut()
-    router.push('/login')
+  // Close on outside click
+  useEffect(() => {
+    if (!menuOpen) return
+    function handler(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [menuOpen])
+
+  // Close on Escape
+  useEffect(() => {
+    if (!menuOpen) return
+    function handler(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [menuOpen])
+
+  function navigate(href: string) {
+    setMenuOpen(false)
+    router.push(href)
   }
 
   const displayName = companyName ?? '…'
 
   return (
-    <div className="flex-shrink-0 border-t border-gray-100 p-4">
-      <div className="flex items-center gap-3">
+    <div ref={containerRef} className="relative flex-shrink-0 border-t border-gray-100 p-3">
+
+      {/* ── Popup menu ──────────────────────────────── */}
+      {menuOpen && (
+        <div className="animate-fade-slide-up absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-card border border-gray-100 bg-white shadow-soft-md">
+
+          {/* Account header */}
+          <div className="flex items-center gap-3 border-b border-gray-100 p-3">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-navy text-xs font-bold text-white">
+              {companyName ? initials(companyName) : '??'}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-soft-text">{displayName}</p>
+              <p className="truncate text-xs text-soft-muted">{email ?? '…'}</p>
+            </div>
+          </div>
+
+          {/* Items */}
+          <div className="py-1">
+            <button
+              onClick={() => navigate('/drivers')}
+              className="flex w-full items-center gap-3 px-3 py-2 text-sm text-soft-text hover:bg-gray-50 transition-colors"
+            >
+              <MenuIcon d={ICONS.userPlus} className="text-soft-muted" />
+              Invite Team Member
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                showToast({ type: 'info', title: 'Coming soon', message: 'Billing is not yet available' })
+              }}
+              className="flex w-full items-center gap-3 px-3 py-2 text-sm text-soft-text hover:bg-gray-50 transition-colors"
+            >
+              <MenuIcon d={ICONS.creditCard} className="text-soft-muted" />
+              Billing
+            </button>
+
+            <div className="my-1 border-t border-gray-100" />
+
+            <button
+              onClick={() => signOut()}
+              className="flex w-full items-center gap-3 px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <MenuIcon d={ICONS.logout} className="text-red-400" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Account button ───────────────────────────── */}
+      <button
+        onClick={() => setMenuOpen(v => !v)}
+        className="flex w-full items-center gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50"
+      >
         <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-navy text-xs font-bold text-white shadow">
           {companyName ? initials(companyName) : '??'}
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 text-left">
           <p className="truncate text-sm font-semibold text-soft-text">{displayName}</p>
           <p className="text-xs text-soft-muted">Admin</p>
         </div>
-      </div>
-      <button
-        onClick={handleSignOut}
-        disabled={signingOut}
-        className="mt-3 w-full text-left text-xs text-soft-muted hover:text-red-400 transition-colors disabled:opacity-50"
-      >
-        {signingOut ? 'Signing out…' : 'Sign out'}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+          className={cn(
+            'h-4 w-4 flex-shrink-0 text-soft-muted transition-transform duration-200',
+            menuOpen && 'rotate-180'
+          )}
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+        </svg>
       </button>
     </div>
   )
@@ -207,24 +320,18 @@ export function Sidebar() {
         {/* ── Logo ─────────────────────────────────── */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-6 py-5">
           <Link href="/dashboard" className="flex items-center gap-2.5" onClick={close}>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-orange shadow">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-                strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-white" aria-hidden="true">
-                <path d="M2 9h20l-2 10H4L2 9z" />
-                <path d="M7 9V6h10v3" />
-                <path d="M2 9l2-3" />
-                <path d="M22 9l-2-3" />
-              </svg>
-            </div>
+            <img src="/logo.svg" alt="" className="h-8 w-8 rounded-lg shadow" aria-hidden="true" />
             <span className="text-[17px] font-bold tracking-tight text-soft-text">
               Skip<span className="text-orange-500">OS</span>
             </span>
           </Link>
 
           {/* Mobile close */}
-          <button onClick={close}
+          <button
+            onClick={close}
             className="rounded-lg p-1.5 text-soft-muted hover:bg-gray-100 hover:text-soft-text transition-colors lg:hidden"
-            aria-label="Close menu">
+            aria-label="Close menu"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -235,10 +342,9 @@ export function Sidebar() {
         <nav className="flex-1 overflow-y-auto py-2">
           {navSections.map((section) => (
             <div key={section.label}>
-              <p className="mx-4 mt-4 mb-1 text-[0.65rem] font-bold uppercase tracking-widest text-soft-muted">
+              <p className="mx-4 mb-1 mt-4 text-[0.65rem] font-bold uppercase tracking-widest text-soft-muted">
                 {section.label}
               </p>
-
               {section.items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + '/')
                 return (
@@ -263,7 +369,7 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* ── User footer ───────────────────────────── */}
+        {/* ── Account footer ────────────────────────── */}
         <UserFooter />
       </aside>
     </>

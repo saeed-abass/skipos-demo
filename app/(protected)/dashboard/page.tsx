@@ -94,12 +94,13 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Row 2: Recent Jobs + Quick Actions ─────────── */}
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch">
 
         {/* Recent Jobs — 2/3 width */}
         <div className="lg:col-span-2">
-          <Card>
+          <Card className="h-full flex flex-col">
             <CardHeader
+              className="flex-shrink-0"
               title="Recent Jobs"
               description="Latest 5 jobs across all types"
               action={
@@ -108,31 +109,33 @@ export default function DashboardPage() {
                 </Link>
               }
             />
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableHeader>Job #</TableHeader>
-                  <TableHeader>Customer</TableHeader>
-                  <TableHeader>Type</TableHeader>
-                  <TableHeader>Skip Size</TableHeader>
-                  <TableHeader>Status</TableHeader>
-                  <TableHeader>Date</TableHeader>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <EmptyTableRow
-                  colSpan={6}
-                  message="No jobs yet. Create your first job to get started."
-                />
-              </TableBody>
-            </Table>
+            <div className="flex-1 overflow-y-auto">
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableHeader>Job #</TableHeader>
+                    <TableHeader>Customer</TableHeader>
+                    <TableHeader>Type</TableHeader>
+                    <TableHeader>Skip Size</TableHeader>
+                    <TableHeader>Status</TableHeader>
+                    <TableHeader>Date</TableHeader>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <EmptyTableRow
+                    colSpan={6}
+                    message="No jobs yet. Create your first job to get started."
+                  />
+                </TableBody>
+              </Table>
+            </div>
           </Card>
         </div>
 
         {/* Quick Actions — 1/3 width */}
         <div>
-          <Card className="h-full">
-            <CardHeader title="Quick Actions" />
+          <Card className="h-full flex flex-col">
+            <CardHeader title="Quick Actions" className="flex-shrink-0" />
             <CardContent>
               <div className="space-y-2.5">
                 <Button className="w-full" size="sm">+ New Job</Button>

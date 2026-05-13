@@ -50,6 +50,12 @@ export default function JobsPage() {
     loadJobs()
   }, [loadJobs])
 
+  useEffect(() => {
+    function handler() { setShowNewJobModal(true) }
+    window.addEventListener('skipos:open-new-job', handler)
+    return () => window.removeEventListener('skipos:open-new-job', handler)
+  }, [])
+
   async function handleStatusUpdate(jobId: string, status: JobStatus) {
     try {
       await updateJobStatus(jobId, status)
