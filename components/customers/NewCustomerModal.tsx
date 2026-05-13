@@ -86,6 +86,8 @@ export function NewCustomerModal({
   const [serverError, setServerError] = useState('')
   const [errorKey, setErrorKey] = useState(0)
   const [successName, setSuccessName] = useState<string | null>(null)
+  const [hasChanges, setHasChanges] = useState(false)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -95,13 +97,26 @@ export function NewCustomerModal({
       setServerError('')
       setSubmitting(false)
       setSuccessName(null)
+      setHasChanges(false)
+      setConfirmDiscard(false)
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
     }
   }, [open])
 
+  useEffect(() => {
+    if (!open) return
+    function handler(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      if (hasChanges) { setConfirmDiscard(true) } else { onClose() }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [open, hasChanges, onClose])
+
   function set(key: keyof FormState, value: string) {
     setForm(prev => ({ ...prev, [key]: value }))
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }))
+    setHasChanges(true)
   }
 
   async function handleSubmit() {
@@ -251,28 +266,48 @@ export function NewCustomerModal({
 
           {/* Footer */}
           {!successName && (
-            <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
-              <button
-                onClick={onClose}
-                disabled={submitting}
-                className="inline-flex items-center justify-center rounded-btn border border-gray-200 bg-white px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-soft-text shadow-soft hover:bg-gray-50 disabled:opacity-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="inline-flex items-center justify-center gap-2 rounded-btn bg-gradient-orange px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md disabled:opacity-70 transition-all"
-              >
-                {submitting && (
-                  <svg className="h-3.5 w-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                )}
-                {submitting ? 'Adding…' : 'Add Customer'}
-              </button>
-            </div>
+            confirmDiscard ? (
+              <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+                <p className="text-sm font-semibold text-soft-text">You have unsaved changes.</p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={onClose}
+                    className="inline-flex items-center justify-center rounded-btn border border-red-300 px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-red-600 hover:bg-red-50 transition-all"
+                  >
+                    Discard changes
+                  </button>
+                  <button
+                    onClick={() => setConfirmDiscard(false)}
+                    className="inline-flex items-center justify-center rounded-btn bg-gradient-orange px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md transition-all"
+                  >
+                    Keep editing
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+                <button
+                  onClick={() => { hasChanges ? setConfirmDiscard(true) : onClose() }}
+                  disabled={submitting}
+                  className="inline-flex items-center justify-center rounded-btn border border-gray-200 bg-white px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-soft-text shadow-soft hover:bg-gray-50 disabled:opacity-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="inline-flex items-center justify-center gap-2 rounded-btn bg-gradient-orange px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md disabled:opacity-70 transition-all"
+                >
+                  {submitting && (
+                    <svg className="h-3.5 w-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  )}
+                  {submitting ? 'Adding…' : 'Add Customer'}
+                </button>
+              </div>
+            )
           )}
 
         </div>

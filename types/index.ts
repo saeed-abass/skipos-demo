@@ -195,3 +195,17 @@ export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
 }
+
+export const WTN_STATUS_LABELS: Record<WTNStatus, string> = {
+  DRAFT:     'Draft',
+  SIGNED:    'Signed',
+  SUBMITTED: 'Submitted',
+  ACCEPTED:  'Accepted',
+  REJECTED:  'Rejected',
+}
+
+export const WTN_UNIT_LABELS: Record<string, string> = {
+  TONNES:       'Tonnes',
+  CUBIC_METRES: 'Cubic Metres',
+  KILOGRAMS:    'Kilograms',
+}
