@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
-  },
+  // Prisma client must not be bundled by webpack on the server
+  serverExternalPackages: ['@prisma/client'],
 }
 
 module.exports = nextConfig
