@@ -258,12 +258,11 @@ export function NewJobModal({ open, onClose, onSuccess }: NewJobModalProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
-      <div className="flex min-h-full items-start justify-center px-4 pb-8 pt-16">
-        <div className="w-full max-w-2xl overflow-hidden rounded-card bg-white shadow-soft-md">
+    <div className="fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm sm:items-start sm:justify-center sm:overflow-y-auto sm:px-4 sm:pb-8 sm:pt-16">
+      <div className="flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-soft-md sm:max-h-none sm:max-w-2xl sm:rounded-card">
 
           {/* ── Header ─────────────────────────────────── */}
-          <div className="relative flex items-center justify-between bg-gradient-orange px-6 py-5">
+          <div className="relative flex-shrink-0 flex items-center justify-between bg-gradient-orange px-6 py-5">
             <div>
               <h2 className="text-base font-bold text-white">New Job</h2>
               <p className="mt-0.5 text-xs text-white/80">Fill in the job details below</p>
@@ -280,6 +279,7 @@ export function NewJobModal({ open, onClose, onSuccess }: NewJobModalProps) {
           </div>
 
           {/* ── Body ───────────────────────────────────── */}
+          <div className="flex-1 overflow-y-auto">
           {successJobRef ? (
             <SuccessOverlay jobRef={successJobRef} />
           ) : (
@@ -454,6 +454,7 @@ export function NewJobModal({ open, onClose, onSuccess }: NewJobModalProps) {
               )}
             </div>
           )}
+          </div>
 
           {/* ── Footer ─────────────────────────────────── */}
           {!successJobRef && (
@@ -501,7 +502,6 @@ export function NewJobModal({ open, onClose, onSuccess }: NewJobModalProps) {
             )
           )}
 
-        </div>
       </div>
     </div>
   )

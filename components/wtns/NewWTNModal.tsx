@@ -243,12 +243,11 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
-      <div className="flex min-h-full items-start justify-center px-4 pb-8 pt-12">
-        <div className="w-full max-w-2xl overflow-hidden rounded-card bg-white shadow-soft-md">
+    <div className="fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm sm:items-start sm:justify-center sm:overflow-y-auto sm:px-4 sm:pb-8 sm:pt-12">
+      <div className="flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-soft-md sm:max-h-none sm:max-w-2xl sm:rounded-card">
 
           {/* Header */}
-          <div className="relative flex items-center justify-between bg-gradient-navy px-6 py-5">
+          <div className="relative flex-shrink-0 flex items-center justify-between bg-gradient-navy px-6 py-5">
             <div>
               <h2 className="text-base font-bold text-white">New Waste Transfer Note</h2>
               <p className="mt-0.5 text-xs text-white/70">Complete all required fields for DEFRA compliance</p>
@@ -265,10 +264,11 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
           </div>
 
           {/* Body */}
+          <div className="flex-1 overflow-y-auto">
           {successWTN ? (
             <SuccessOverlay wtnNumber={successWTN} />
           ) : (
-            <div className="divide-y divide-gray-100 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 160px)' }}>
+            <div className="divide-y divide-gray-100">
 
               {/* Section 1 — Link to Job */}
               <div className="p-6">
@@ -479,6 +479,7 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
               </div>
             </div>
           )}
+          </div>
 
           {/* Footer */}
           {!successWTN && (
@@ -530,7 +531,6 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
               </div>
             )
           )}
-        </div>
       </div>
     </div>
   )

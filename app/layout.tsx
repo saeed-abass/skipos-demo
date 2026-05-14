@@ -1,10 +1,17 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { ToastProvider } from '@/components/ui/toast'
 import { LoaderWrapper } from '@/components/ui/LoaderWrapper'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
+
+export const viewport: Viewport = {
+  themeColor: '#F97316',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
 
 export const metadata: Metadata = {
   title: {
@@ -13,6 +20,12 @@ export const metadata: Metadata = {
   },
   description:
     'The operating system for skip hire. DEFRA-compliant job scheduling, fleet management, and digital waste tracking for UK operators.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'SkipOS',
+  },
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',

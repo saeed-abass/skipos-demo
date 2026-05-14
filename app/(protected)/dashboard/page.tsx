@@ -202,7 +202,7 @@ export default function DashboardPage() {
           pt-8 provides clearance for the floating icon boxes
           that protrude 1.5rem above each card top edge.
       ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-6 pt-8 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 pt-8 xl:grid-cols-4 xl:gap-6">
         {loading ? (
           <>
             <SkeletonStatCard />

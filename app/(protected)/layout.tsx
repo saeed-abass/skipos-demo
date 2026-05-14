@@ -11,7 +11,7 @@ export default function ProtectedLayout({
     <SidebarProvider>
       <OnboardingGate />
       <Sidebar />
-      <div className="ml-[274px] min-h-screen">
+      <div className="ml-0 min-h-screen lg:ml-[274px]">
         <Topbar />
         <main>{children}</main>
       </div>

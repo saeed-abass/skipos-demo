@@ -203,7 +203,77 @@ export function JobsTable({ jobs, loading, onNewJob, onStatusUpdate }: JobsTable
 
   return (
     <div className="overflow-hidden rounded-card bg-white shadow-soft">
-      <div className="w-full overflow-x-auto">
+
+      {/* Mobile card list */}
+      <div className="lg:hidden">
+        {loading ? (
+          <div className="divide-y divide-gray-50">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="space-y-2 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="h-3.5 w-20 animate-pulse rounded bg-gray-100" />
+                  <div className="h-5 w-16 animate-pulse rounded-full bg-gray-100" />
+                </div>
+                <div className="h-4 w-40 animate-pulse rounded bg-gray-100" />
+                <div className="h-3 w-28 animate-pulse rounded bg-gray-100" />
+              </div>
+            ))}
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="h-12 w-12 text-soft-muted/30">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-soft-text">No jobs yet</p>
+                <p className="mt-0.5 text-xs text-soft-muted">Create your first job to get started</p>
+              </div>
+              <button
+                onClick={onNewJob}
+                className="mt-1 inline-flex items-center gap-1.5 rounded-btn bg-gradient-orange px-4 py-2 text-[0.65rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md transition-all"
+              >
+                + New Job
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {visible.map(job => (
+              <div key={job.id} className="flex flex-col gap-2 p-4 hover:bg-gray-50/50 transition-colors">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-xs font-semibold text-soft-text">
+                    {job.job_number ?? jobRef(job.id)}
+                  </span>
+                  <JobStatusBadge status={job.status as JobStatus} />
+                </div>
+                <div>
+                  {job.customer ? (
+                    <p className="font-semibold text-soft-text">{job.customer.name}</p>
+                  ) : (
+                    <p className="text-soft-muted">No customer</p>
+                  )}
+                  {job.delivery_address && (
+                    <p className="mt-0.5 truncate text-xs text-soft-muted">{job.delivery_address}</p>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <TypeBadge type={job.job_type} />
+                  <span className="text-xs text-soft-muted">
+                    {SKIP_SIZE_LABELS[job.skip_size as keyof typeof SKIP_SIZE_LABELS] ?? job.skip_size}
+                  </span>
+                  {job.scheduled_date && (
+                    <span className="text-xs text-soft-muted">{formatJobDate(job.scheduled_date)}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden w-full overflow-x-auto lg:block">
         <table className="w-full text-sm">
           <thead className="bg-gray-50/80">
             <tr>

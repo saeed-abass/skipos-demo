@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { useSidebar } from './sidebar'
 import { globalSearch, type SearchResults } from '@/lib/actions/search'
 import { JOB_STATUS_LABELS } from '@/types'
 import { KeyboardShortcutsModal } from '@/components/ui/KeyboardShortcutsModal'
@@ -234,7 +233,6 @@ function NotificationsDropdown() {
 // ─────────────────────────────────────────────────────────
 
 export function Topbar() {
-  const { toggle } = useSidebar()
   const router = useRouter()
   const pathname = usePathname()
   const { title, section } = getPageMeta(pathname)
@@ -244,10 +242,12 @@ export function Topbar() {
   const [searchResults, setSearchResults] = useState<SearchResults | null>(null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [showShortcutsModal, setShowShortcutsModal] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
   const searchContainerRef = useRef<HTMLDivElement>(null)
   const bellContainerRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Click outside — closes the active panel
@@ -339,21 +339,58 @@ export function Topbar() {
       {showShortcutsModal && (
         <KeyboardShortcutsModal onClose={() => setShowShortcutsModal(false)} />
       )}
-      <header className="mb-4 mr-4 mt-4 flex h-16 items-center justify-between rounded-card bg-white px-5 shadow-soft">
 
-        {/* ── Left: hamburger + breadcrumb ──────────── */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={toggle}
-            className="rounded-lg p-1.5 text-soft-muted hover:bg-gray-100 hover:text-soft-text transition-colors lg:hidden"
-            aria-label="Open menu"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-          </button>
+      {/* Mobile full-screen search overlay */}
+      {mobileSearchOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-white lg:hidden">
+          <div className="flex flex-shrink-0 items-center gap-2 border-b border-gray-100 px-3 py-3">
+            <button
+              onClick={() => { setMobileSearchOpen(false); setQuery(''); setSearchResults(null) }}
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-soft-muted hover:bg-gray-100"
+              aria-label="Close search"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+            </button>
+            <div className="relative flex-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                strokeWidth={1.5} stroke="currentColor"
+                className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-soft-muted">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+              <input
+                ref={mobileSearchInputRef}
+                autoFocus
+                type="text"
+                value={query}
+                onChange={e => handleSearchChange(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search jobs, customers…"
+                className="h-10 w-full rounded-btn border-0 bg-gray-100 pl-8 pr-3 text-sm text-soft-text placeholder:text-soft-muted focus:outline-none focus:ring-2 focus:ring-orange-200"
+              />
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2">
+            <SearchDropdown
+              query={query}
+              results={searchResults}
+              loading={searchLoading}
+              onNavigate={href => { setMobileSearchOpen(false); setQuery(''); setSearchResults(null); router.push(href) }}
+            />
+          </div>
+        </div>
+      )}
 
-          <div>
+      <header className="mb-3 mt-3 flex h-14 items-center justify-between rounded-card bg-white px-4 shadow-soft mx-3 lg:mb-4 lg:mr-4 lg:mt-4 lg:ml-0 lg:h-16 lg:px-5 lg:mx-0">
+
+        {/* ── Left: title (mobile) / breadcrumb (desktop) ── */}
+        <div className="flex min-w-0 items-center gap-3">
+          {/* Mobile: page title only */}
+          <h1 className="text-sm font-semibold text-soft-text lg:hidden">{title}</h1>
+
+          {/* Desktop: breadcrumb + title */}
+          <div className="hidden lg:block">
             <p className="text-[0.65rem] font-medium text-soft-muted">
               <span>Home</span>
               <span className="mx-1 text-soft-muted/60">/</span>
@@ -365,11 +402,22 @@ export function Topbar() {
           </div>
         </div>
 
-        {/* ── Right: search + bell + avatar ─────────── */}
-        <div className="flex items-center gap-2">
+        {/* ── Right: actions ─────────────────────────── */}
+        <div className="flex flex-shrink-0 items-center gap-1 lg:gap-2">
 
-          {/* Search */}
-          <div ref={searchContainerRef} className="relative hidden md:block">
+          {/* Mobile search icon */}
+          <button
+            onClick={() => setMobileSearchOpen(true)}
+            className="rounded-lg p-2 text-soft-muted hover:bg-gray-100 hover:text-soft-text transition-colors lg:hidden"
+            aria-label="Search"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          </button>
+
+          {/* Desktop search input */}
+          <div ref={searchContainerRef} className="relative hidden lg:block">
             <div className="relative flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                 strokeWidth={1.5} stroke="currentColor"
@@ -402,11 +450,11 @@ export function Topbar() {
             )}
           </div>
 
-          {/* Keyboard shortcuts */}
+          {/* Keyboard shortcuts — desktop only */}
           <button
             onClick={() => setShowShortcutsModal(true)}
             title="Keyboard shortcuts"
-            className="rounded-lg p-2.5 text-soft-muted transition-colors hover:bg-gray-100 hover:text-soft-text"
+            className="hidden rounded-lg p-2.5 text-soft-muted transition-colors hover:bg-gray-100 hover:text-soft-text lg:flex"
             aria-label="Keyboard shortcuts"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -420,7 +468,7 @@ export function Topbar() {
             <button
               onClick={() => togglePanel('bell')}
               className={cn(
-                'relative rounded-lg p-2.5 transition-colors',
+                'relative rounded-lg p-2 transition-colors lg:p-2.5',
                 openPanel === 'bell'
                   ? 'bg-gray-100 text-soft-text'
                   : 'text-soft-muted hover:bg-gray-100 hover:text-soft-text'
@@ -428,11 +476,9 @@ export function Topbar() {
               aria-label="Notifications"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+                strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 lg:h-6 lg:w-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
               </svg>
-              {/* Orange dot — hidden when no notifications */}
-              {/* <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-orange-500 ring-2 ring-white" /> */}
             </button>
             {openPanel === 'bell' && <NotificationsDropdown />}
           </div>

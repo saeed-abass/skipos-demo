@@ -258,8 +258,8 @@ interface WTNDetailPanelProps {
 export function WTNDetailPanel({ wtn, onClose, onStatusChange }: WTNDetailPanelProps) {
   if (!wtn) {
     return (
-      <div className="w-[400px] overflow-hidden rounded-card bg-white shadow-soft">
-        <div className="flex h-48 items-center justify-center">
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-card bg-white shadow-soft lg:h-auto lg:w-[400px]">
+        <div className="flex flex-1 items-center justify-center">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-300 border-t-orange-500" />
         </div>
       </div>
@@ -267,10 +267,10 @@ export function WTNDetailPanel({ wtn, onClose, onStatusChange }: WTNDetailPanelP
   }
 
   return (
-    <div className="w-[400px] overflow-hidden rounded-card bg-white shadow-soft">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-card bg-white shadow-soft lg:h-auto lg:w-[400px]">
 
       {/* Header */}
-      <div className="flex items-start justify-between border-b border-gray-100 p-4">
+      <div className="flex-shrink-0 flex items-start justify-between border-b border-gray-100 p-4">
         <div>
           <p className="font-mono text-lg font-bold text-soft-text">{wtn.wtn_number}</p>
           <div className="mt-1 flex items-center gap-2">
@@ -292,7 +292,7 @@ export function WTNDetailPanel({ wtn, onClose, onStatusChange }: WTNDetailPanelP
       </div>
 
       {/* Scrollable body */}
-      <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
 
         {/* Status timeline */}
         <div className="border-b border-gray-100 px-2">
@@ -376,7 +376,7 @@ export function WTNDetailPanel({ wtn, onClose, onStatusChange }: WTNDetailPanelP
       </div>
 
       {/* Footer actions */}
-      <div className="border-t border-gray-100 p-4">
+      <div className="flex-shrink-0 border-t border-gray-100 p-4">
         <FooterActions wtn={wtn} onStatusChange={onStatusChange} />
       </div>
     </div>

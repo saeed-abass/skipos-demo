@@ -140,10 +140,25 @@ export default function CustomersPage() {
           />
         </div>
 
-        {/* Slide-in detail panel */}
+        {/* Mobile overlay panel */}
+        {showPanel && (
+          <div className="fixed inset-0 z-40 lg:hidden">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closePanel} />
+            <div className="absolute inset-x-0 bottom-0 top-14 overflow-hidden rounded-t-2xl bg-white shadow-soft-md">
+              <CustomerDetailPanel
+                customer={selectedCustomer}
+                startInEditMode={startInEditMode}
+                onClose={closePanel}
+                onUpdated={handleUpdated}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Desktop slide-in panel */}
         <div
           className={cn(
-            'flex-shrink-0 overflow-hidden transition-[width,opacity] duration-300 ease-in-out',
+            'hidden flex-shrink-0 overflow-hidden transition-[width,opacity] duration-300 ease-in-out lg:block',
             showPanel ? 'w-[360px] opacity-100' : 'w-0 opacity-0 pointer-events-none'
           )}
         >

@@ -334,53 +334,147 @@ function UserFooter() {
 }
 
 // ─────────────────────────────────────────────────────────
-// Sidebar
+// Bottom nav (mobile only)
 // ─────────────────────────────────────────────────────────
 
-export function Sidebar() {
-  const { isOpen, close } = useSidebar()
+const BOTTOM_NAV = [
+  { label: 'Dashboard', href: '/dashboard', icon: ICONS.dashboard },
+  { label: 'Jobs',      href: '/jobs',      icon: ICONS.jobs },
+  { label: 'WTNs',     href: '/wtns',      icon: ICONS.wtns },
+  { label: 'Customers', href: '/customers', icon: ICONS.customers },
+]
+
+function BottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { showToast } = useToast()
+  const [showDrawer, setShowDrawer] = useState(false)
+
+  const drawerItems = [
+    { label: 'Team',     href: '/team',     icon: ICONS.team },
+    { label: 'Fleet',    href: '/fleet',    icon: ICONS.fleet },
+    { label: 'Settings', href: '/settings', icon: ICONS.settings },
+  ]
 
   return (
     <>
-      {/* Mobile backdrop */}
-      {isOpen && (
+      {/* Drawer backdrop */}
+      {showDrawer && (
         <div
-          className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm lg:hidden"
-          onClick={close}
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+          onClick={() => setShowDrawer(false)}
           aria-hidden="true"
         />
       )}
 
-      <aside
-        className={cn(
-          'fixed w-[250px] bg-white z-40 overflow-hidden flex flex-col',
-          'top-0 bottom-0 left-0',
-          'lg:left-4 lg:top-4 lg:bottom-4 lg:rounded-card lg:shadow-soft-md',
-          'transition-transform duration-200 ease-in-out',
-          isOpen ? 'translate-x-0' : '-translate-x-full',
-          'lg:translate-x-0',
-        )}
-      >
+      {/* Slide-up drawer */}
+      <div className={cn(
+        'fixed inset-x-0 z-50 bg-white rounded-t-2xl shadow-soft-md lg:hidden',
+        'transition-transform duration-300 ease-in-out',
+        showDrawer ? 'bottom-0 translate-y-0' : 'bottom-0 translate-y-full pointer-events-none',
+      )}>
+        <div className="mx-auto my-2 h-1 w-10 rounded-full bg-gray-200" />
+        <div className="px-4 pb-6 pt-2">
+          <p className="mb-2 text-[0.6rem] font-bold uppercase tracking-widest text-soft-muted">
+            More
+          </p>
+          {drawerItems.map(item => {
+            const active = pathname === item.href || pathname.startsWith(item.href + '/')
+            return (
+              <button
+                key={item.href}
+                onClick={() => { setShowDrawer(false); router.push(item.href) }}
+                className={cn(
+                  'flex w-full items-center gap-4 rounded-xl px-4 py-3 text-sm font-medium transition-colors',
+                  active ? 'bg-orange-50 text-orange-600' : 'text-soft-text hover:bg-gray-50',
+                )}
+              >
+                <NavIcon d={item.icon} />
+                {item.label}
+              </button>
+            )
+          })}
+
+          <div className="my-3 border-t border-gray-100" />
+
+          <button
+            onClick={() => {
+              setShowDrawer(false)
+              showToast({ type: 'info', title: 'Coming soon', message: 'Billing is not yet available' })
+            }}
+            className="flex w-full items-center gap-4 rounded-xl px-4 py-3 text-sm font-medium text-soft-text hover:bg-gray-50 transition-colors"
+          >
+            <MenuIcon d={ICONS.creditCard} className="h-5 w-5 text-soft-muted" />
+            Billing
+          </button>
+
+          <button
+            onClick={() => { setShowDrawer(false); signOut() }}
+            className="flex w-full items-center gap-4 rounded-xl px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+          >
+            <MenuIcon d={ICONS.logout} className="h-5 w-5 text-red-400" />
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      {/* Bottom nav bar */}
+      <nav className="fixed inset-x-0 bottom-0 z-50 flex h-16 items-center justify-around border-t border-gray-100 bg-white lg:hidden">
+        {BOTTOM_NAV.map(item => {
+          const active = pathname === item.href || pathname.startsWith(item.href + '/')
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex flex-1 flex-col items-center gap-0.5 py-2 transition-colors',
+                active ? 'text-orange-500' : 'text-soft-muted',
+              )}
+            >
+              <NavIcon d={item.icon} />
+              <span className="text-[0.6rem] font-semibold">{item.label}</span>
+            </Link>
+          )
+        })}
+
+        {/* More */}
+        <button
+          onClick={() => setShowDrawer(v => !v)}
+          className={cn(
+            'flex flex-1 flex-col items-center gap-0.5 py-2 transition-colors',
+            showDrawer ? 'text-orange-500' : 'text-soft-muted',
+          )}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+          <span className="text-[0.6rem] font-semibold">More</span>
+        </button>
+      </nav>
+    </>
+  )
+}
+
+// ─────────────────────────────────────────────────────────
+// Sidebar
+// ─────────────────────────────────────────────────────────
+
+export function Sidebar() {
+  const pathname = usePathname()
+
+  return (
+    <>
+      {/* Desktop sidebar — hidden on mobile */}
+      <aside className="fixed bottom-0 left-0 top-0 z-40 hidden w-[250px] flex-col overflow-hidden bg-white lg:bottom-4 lg:left-4 lg:top-4 lg:flex lg:rounded-card lg:shadow-soft-md">
+
         {/* ── Logo ─────────────────────────────────── */}
-        <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-6 py-5">
-          <Link href="/dashboard" className="flex items-center gap-2.5" onClick={close}>
+        <div className="flex flex-shrink-0 items-center border-b border-gray-100 px-6 py-5">
+          <Link href="/dashboard" className="flex items-center gap-2.5">
             <img src="/logo.svg" alt="" className="h-8 w-8 rounded-lg shadow" aria-hidden="true" />
             <span className="text-[17px] font-bold tracking-tight text-soft-text">
               Skip<span className="text-orange-500">OS</span>
             </span>
           </Link>
-
-          {/* Mobile close */}
-          <button
-            onClick={close}
-            className="rounded-lg p-1.5 text-soft-muted hover:bg-gray-100 hover:text-soft-text transition-colors lg:hidden"
-            aria-label="Close menu"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
         </div>
 
         {/* ── Navigation ───────────────────────────── */}
@@ -396,7 +490,6 @@ export function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={close}
                     className={cn(
                       'mx-2 mb-0.5 flex items-center gap-3 rounded-lg px-4 py-2.5',
                       'text-sm font-medium transition-all duration-150',
@@ -417,6 +510,9 @@ export function Sidebar() {
         {/* ── Account footer ────────────────────────── */}
         <UserFooter />
       </aside>
+
+      {/* Mobile bottom nav */}
+      <BottomNav />
     </>
   )
 }

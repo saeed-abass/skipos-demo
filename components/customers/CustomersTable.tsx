@@ -162,7 +162,74 @@ export function CustomersTable({
 
   return (
     <div className="overflow-hidden rounded-card bg-white shadow-soft">
-      <div className="w-full overflow-x-auto">
+
+      {/* Mobile card list */}
+      <div className="lg:hidden">
+        {loading ? (
+          <div className="divide-y divide-gray-50">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 p-4">
+                <div className="h-10 w-10 flex-shrink-0 animate-pulse rounded-full bg-gray-100" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-4 w-36 animate-pulse rounded bg-gray-100" />
+                  <div className="h-3 w-24 animate-pulse rounded bg-gray-100" />
+                </div>
+                <div className="h-5 w-10 animate-pulse rounded-full bg-gray-100" />
+              </div>
+            ))}
+          </div>
+        ) : customers.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="h-12 w-12 text-soft-muted/30">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-soft-text">No customers yet</p>
+                <p className="mt-0.5 text-xs text-soft-muted">Add your first customer to start creating jobs</p>
+              </div>
+              <button
+                onClick={onNew}
+                className="mt-1 inline-flex items-center gap-1.5 rounded-btn bg-gradient-orange px-4 py-2 text-[0.65rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md transition-all"
+              >
+                + New Customer
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {customers.map(customer => (
+              <div
+                key={customer.id}
+                onClick={() => onRowClick(customer.id)}
+                className={cn(
+                  'flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors',
+                  selectedId === customer.id ? 'bg-orange-50/60' : 'hover:bg-gray-50/50',
+                )}
+              >
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-navy text-xs font-bold text-white">
+                  {initials(customer.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-soft-text">{customer.name}</p>
+                  <p className="mt-0.5 truncate text-xs text-soft-muted">
+                    {customer.phone || customer.email || 'No contact info'}
+                  </p>
+                </div>
+                <span className={cn(
+                  'flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-bold',
+                  customer._count.jobs > 0 ? 'bg-orange-50 text-orange-600' : 'bg-gray-100 text-gray-500',
+                )}>
+                  {customer._count.jobs}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden w-full overflow-x-auto lg:block">
         <table className="w-full text-sm">
           <thead className="bg-gray-50/80">
             <tr>

@@ -177,12 +177,11 @@ export function AddSkipModal({ open, onClose, onSuccess }: AddSkipModalProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
-      <div className="flex min-h-full items-start justify-center px-4 pb-8 pt-16">
-        <div className="w-full max-w-md overflow-hidden rounded-card bg-white shadow-soft-md">
+    <div className="fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm sm:items-start sm:justify-center sm:overflow-y-auto sm:px-4 sm:pb-8 sm:pt-16">
+      <div className="flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-soft-md sm:max-h-none sm:max-w-md sm:rounded-card">
 
           {/* Header */}
-          <div className="flex items-center justify-between bg-gradient-navy px-6 py-5">
+          <div className="flex-shrink-0 flex items-center justify-between bg-gradient-navy px-6 py-5">
             <div>
               <h2 className="text-base font-bold text-white">Add Skip to Fleet</h2>
               <p className="mt-0.5 text-xs text-white/70">Register a new skip in your yard</p>
@@ -199,6 +198,7 @@ export function AddSkipModal({ open, onClose, onSuccess }: AddSkipModalProps) {
           </div>
 
           {/* Body */}
+          <div className="flex-1 overflow-y-auto">
           {success ? (
             <SuccessOverlay />
           ) : (
@@ -285,6 +285,7 @@ export function AddSkipModal({ open, onClose, onSuccess }: AddSkipModalProps) {
               )}
             </div>
           )}
+          </div>
 
           {/* Footer */}
           {!success && (
@@ -329,7 +330,6 @@ export function AddSkipModal({ open, onClose, onSuccess }: AddSkipModalProps) {
             )
           )}
 
-        </div>
       </div>
     </div>
   )

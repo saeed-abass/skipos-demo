@@ -258,7 +258,7 @@ export function CustomerDetailPanel({
   }, [customer?.id, startInEditMode])
 
   return (
-    <div className="flex max-h-[80vh] flex-col overflow-hidden rounded-card bg-white shadow-soft-md">
+    <div className="flex h-full flex-col overflow-hidden rounded-card bg-white shadow-soft-md lg:max-h-[80vh]">
 
       {/* Header */}
       <div className="flex-shrink-0 border-b border-gray-100 p-5">

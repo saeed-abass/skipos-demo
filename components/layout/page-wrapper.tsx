@@ -15,7 +15,7 @@ interface PageHeaderProps {
 // No top padding — topbar provides mt-4, content starts below it
 export function PageWrapper({ children, className }: PageWrapperProps) {
   return (
-    <div className={cn('pr-4 pb-4', className)}>
+    <div className={cn('px-3 pb-20 lg:px-0 lg:pr-4 lg:pb-4', className)}>
       {children}
     </div>
   )

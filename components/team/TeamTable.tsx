@@ -319,7 +319,84 @@ export function TeamTable({
 
   return (
     <div className="overflow-hidden rounded-card bg-white shadow-soft">
-      <div className="overflow-x-auto">
+
+      {/* Mobile card list */}
+      <div className="lg:hidden">
+        {loading ? (
+          <div className="divide-y divide-gray-50">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 p-4">
+                <div className="h-10 w-10 flex-shrink-0 animate-pulse rounded-full bg-gray-100" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-4 w-32 animate-pulse rounded bg-gray-100" />
+                  <div className="h-3 w-44 animate-pulse rounded bg-gray-100" />
+                </div>
+                <div className="h-5 w-14 animate-pulse rounded-full bg-gray-100" />
+              </div>
+            ))}
+          </div>
+        ) : sorted.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="h-10 w-10 text-gray-300">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+              </svg>
+              <p className="text-sm font-semibold text-soft-text">No team members yet</p>
+              <p className="text-xs text-soft-muted">Invite drivers and office staff to collaborate</p>
+              <button
+                onClick={onNew}
+                className="mt-1 inline-flex items-center gap-1.5 rounded-btn bg-gradient-orange px-4 py-2 text-[0.65rem] font-bold uppercase tracking-[0.025em] text-white shadow-soft hover:shadow-md transition-all"
+              >
+                + Invite Member
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {sorted.map(member => {
+              const isCurrentUser = member.id === currentUserId
+              return (
+                <div
+                  key={member.id}
+                  onClick={() => onView(member)}
+                  className={cn(
+                    'flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-50/50',
+                    isCurrentUser && 'bg-orange-50/30',
+                  )}
+                >
+                  <div className={cn(
+                    'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white',
+                    AVATAR_GRADIENT[member.role] ?? 'bg-gradient-orange',
+                  )}>
+                    {initials(member.full_name)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-semibold text-soft-text">{member.full_name}</p>
+                      {isCurrentUser && (
+                        <span className="text-[0.65rem] text-soft-muted">(You)</span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-soft-muted">{member.email}</p>
+                  </div>
+                  <div className="flex flex-shrink-0 flex-col items-end gap-1">
+                    <RoleBadge role={member.role as Role} />
+                    <span className={cn(
+                      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold',
+                      member._count.jobs > 0 ? 'bg-orange-50 text-orange-600' : 'bg-gray-100 text-gray-500',
+                    )}>
+                      {member._count.jobs}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden overflow-x-auto lg:block">
         <table className="w-full min-w-[700px] border-collapse">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/60">

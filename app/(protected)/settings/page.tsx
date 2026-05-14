@@ -107,7 +107,7 @@ export default function SettingsPage() {
         {/* Left: tab navigation */}
         <div className="lg:sticky lg:top-4">
           <div className="rounded-card bg-white p-2 shadow-soft">
-            <nav className="flex flex-col gap-0.5">
+            <nav className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:gap-0.5 lg:pb-0">
               {TABS.map(tab => (
                 <button
                   key={tab.id}
@@ -118,7 +118,7 @@ export default function SettingsPage() {
                       : undefined
                   }
                   className={cn(
-                    'flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-all',
+                    'flex flex-shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all lg:w-full lg:gap-3 lg:px-4 lg:py-2.5',
                     activeTab === tab.id
                       ? 'bg-gradient-orange text-white'
                       : tab.danger
