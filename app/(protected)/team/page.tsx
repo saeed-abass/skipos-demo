@@ -14,8 +14,6 @@ import { InviteMemberModal } from '@/components/team/InviteMemberModal'
 import { MemberDetailPanel } from '@/components/team/MemberDetailPanel'
 import { useToast } from '@/components/ui/toast'
 
-const DEMO_COMPANY_ID = 'demo-company'
-
 // ─────────────────────────────────────────────────────────
 // Role summary cards
 // ─────────────────────────────────────────────────────────
@@ -68,7 +66,7 @@ export default function TeamPage() {
   const loadTeam = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await getTeamMembers(DEMO_COMPANY_ID)
+      const data = await getTeamMembers()
       setMembers(data.members)
       setCurrentUserId(data.currentUserId)
     } catch {
@@ -195,7 +193,6 @@ export default function TeamPage() {
         open={showInviteModal}
         onClose={() => setShowInviteModal(false)}
         onSuccess={loadTeam}
-        companyId={DEMO_COMPANY_ID}
       />
 
     </PageWrapper>

@@ -58,6 +58,9 @@ type FormState = {
   collectionAddress: string
   collectionPostcode: string
   disposalSiteName: string
+  disposalSiteAddress: string
+  consigneeName: string
+  consigneeAddress: string
   carrierName: string
   carrierEaNumber: string
   transferDate: string
@@ -74,6 +77,9 @@ const INITIAL_FORM: FormState = {
   collectionAddress: '',
   collectionPostcode: '',
   disposalSiteName: '',
+  disposalSiteAddress: '',
+  consigneeName: '',
+  consigneeAddress: '',
   carrierName: '',
   carrierEaNumber: '',
   transferDate: new Date().toISOString().slice(0, 10),
@@ -207,17 +213,20 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
     setServerError('')
     try {
       const result = await createWTN({
-        jobId:              form.jobId,
-        wasteDescription:   form.wasteDescription,
-        ewcCode:            form.ewcCode,
-        quantityKg:         form.quantityKg ? parseFloat(form.quantityKg) : undefined,
-        collectionAddress:  form.collectionAddress,
-        collectionPostcode: form.collectionPostcode.toUpperCase(),
-        disposalSiteName:   form.disposalSiteName || undefined,
-        carrierName:        form.carrierName,
-        carrierEaNumber:    form.carrierEaNumber || undefined,
-        transferDate:       form.transferDate,
-        notes:              form.notes || undefined,
+        jobId:               form.jobId,
+        wasteDescription:    form.wasteDescription,
+        ewcCode:             form.ewcCode,
+        quantityKg:          form.quantityKg ? parseFloat(form.quantityKg) : undefined,
+        collectionAddress:   form.collectionAddress,
+        collectionPostcode:  form.collectionPostcode.toUpperCase(),
+        disposalSiteName:    form.disposalSiteName    || undefined,
+        disposalSiteAddress: form.disposalSiteAddress || undefined,
+        consigneeName:       form.consigneeName       || undefined,
+        consigneeAddress:    form.consigneeAddress    || undefined,
+        carrierName:         form.carrierName,
+        carrierEaNumber:     form.carrierEaNumber     || undefined,
+        transferDate:        form.transferDate,
+        notes:               form.notes               || undefined,
       })
       setSuccessWTN(result.wtn_number)
       showToast({ type: 'success', title: 'WTN Created', message: `${result.wtn_number} saved as Draft` })
@@ -283,7 +292,7 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
                         {jobs.map(j => (
                           <option key={j.id} value={j.id}>
                             {`JOB-${j.id.slice(-6).toUpperCase()}`}
-                            {' — '}
+                            {': '}
                             {j.customer.name}
                             {' ('}
                             {SKIP_SIZE_LABELS[j.skip_size as keyof typeof SKIP_SIZE_LABELS] ?? j.skip_size}
@@ -303,7 +312,7 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
                 </Field>
                 {selectedJob && (
                   <p className="mt-2 text-xs font-semibold text-green-600">
-                    ✓ Job details imported — collection address pre-filled
+                    ✓ Job details imported. Collection address pre-filled.
                   </p>
                 )}
               </div>
@@ -331,7 +340,7 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
                       className={inputClass}
                     />
                     <p className="mt-1 text-[0.65rem] text-soft-muted">
-                      EWC waste code — find at environment-agency.gov.uk
+                      EWC waste code. Find at environment-agency.gov.uk.
                     </p>
                   </Field>
 
@@ -382,13 +391,43 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
                     />
                   </Field>
 
-                  <Field label="Disposal Site" required error={errors.disposalSiteName} className="sm:col-span-2">
+                  <Field label="Disposal Site Name" required error={errors.disposalSiteName} className="sm:col-span-2">
                     <input
                       type="text"
                       value={form.disposalSiteName}
                       onChange={e => set('disposalSiteName', e.target.value)}
-                      placeholder="Licensed disposal facility name and address"
+                      placeholder="Licensed disposal facility name"
                       className={cn(inputClass, errors.disposalSiteName && errorInputClass)}
+                    />
+                  </Field>
+
+                  <Field label="Disposal Site Address (optional)" className="sm:col-span-2">
+                    <textarea
+                      rows={2}
+                      value={form.disposalSiteAddress}
+                      onChange={e => set('disposalSiteAddress', e.target.value)}
+                      placeholder="Full address of disposal facility"
+                      className={cn(inputClass, 'resize-none')}
+                    />
+                  </Field>
+
+                  <Field label="Consignee Name (optional)">
+                    <input
+                      type="text"
+                      value={form.consigneeName}
+                      onChange={e => set('consigneeName', e.target.value)}
+                      placeholder="Receiving facility name"
+                      className={inputClass}
+                    />
+                  </Field>
+
+                  <Field label="Consignee Address (optional)">
+                    <input
+                      type="text"
+                      value={form.consigneeAddress}
+                      onChange={e => set('consigneeAddress', e.target.value)}
+                      placeholder="Receiving facility address"
+                      className={inputClass}
                     />
                   </Field>
                 </div>

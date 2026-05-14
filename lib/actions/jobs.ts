@@ -43,12 +43,16 @@ export async function getJobs(filters?: {
         company_id: true,
         customer_id: true,
         driver_id: true,
+        job_number: true,
         job_type: true,
         status: true,
         skip_size: true,
         delivery_address: true,
         delivery_postcode: true,
         scheduled_date: true,
+        permit_required: true,
+        permit_number: true,
+        price: true,
         notes: true,
         created_at: true,
         customer: { select: { id: true, name: true, phone: true } },
@@ -71,9 +75,11 @@ export async function createJob(data: {
   scheduled_date?: Date | null
   driver_id?: string | null
   notes?: string | null
+  price?: number | null
+  permit_required?: boolean
 }) {
   const companyId = await getCompanyId()
-  return prisma.job.create({
+  const created = await prisma.job.create({
     data: {
       company_id: companyId,
       customer_id: data.customer_id,
@@ -84,9 +90,17 @@ export async function createJob(data: {
       scheduled_date: data.scheduled_date ?? null,
       driver_id: data.driver_id ?? null,
       notes: data.notes ?? null,
+      price: data.price ?? null,
+      permit_required: data.permit_required ?? false,
       status: 'PENDING',
     },
-    select: { id: true, status: true, job_type: true },
+    select: { id: true },
+  })
+  const jobNumber = `JOB-${created.id.slice(-6).toUpperCase()}`
+  return prisma.job.update({
+    where: { id: created.id },
+    data: { job_number: jobNumber },
+    select: { id: true, job_number: true, status: true, job_type: true },
   })
 }
 

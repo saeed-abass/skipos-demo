@@ -15,6 +15,7 @@ export function DangerZoneSection() {
   const { showToast } = useToast()
   const [showModal, setShowModal]       = useState(false)
   const [confirmText, setConfirmText]   = useState('')
+  const [showExportInfo, setShowExportInfo] = useState(false)
 
   function openModal() {
     setConfirmText('')
@@ -41,24 +42,38 @@ export function DangerZoneSection() {
         {/* Header */}
         <div className="mb-6 border-b border-red-100 pb-4">
           <h3 className="text-lg font-bold text-red-600">Danger Zone</h3>
-          <p className="mt-1 text-sm text-red-400">Irreversible actions — proceed with caution</p>
+          <p className="mt-1 text-sm text-red-400">Irreversible actions. Proceed with caution.</p>
         </div>
 
         {/* Export data */}
-        <div className="flex items-center justify-between border-b border-gray-50 py-4">
-          <div>
-            <p className="text-sm font-semibold text-soft-text">Export All Data</p>
-            <p className="mt-0.5 text-xs text-soft-muted">
-              Download all your jobs, customers, WTNs and fleet data as CSV
-            </p>
+        <div className="border-b border-gray-50 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-soft-text">Export All Data</p>
+              <p className="mt-0.5 text-xs text-soft-muted">
+                Download all your jobs, customers, WTNs and fleet data as CSV
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowExportInfo(v => !v)}
+              className="flex flex-shrink-0 items-center gap-1.5 rounded-btn border border-gray-200 px-4 py-2 text-sm font-medium text-soft-text transition-colors hover:bg-gray-50"
+            >
+              Export
+              <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase text-orange-600">
+                Beta
+              </span>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => showToast({ type: 'info', title: 'Data export coming soon' })}
-            className="flex-shrink-0 rounded-btn border border-gray-200 px-4 py-2 text-sm font-medium text-soft-text transition-colors hover:bg-gray-50"
-          >
-            Export
-          </button>
+          {showExportInfo && (
+            <p className="mt-2 text-xs text-soft-muted">
+              CSV export is coming in the next update. All your data is securely stored and can be
+              exported on request by emailing{' '}
+              <a href="mailto:support@skipos.co.uk" className="underline hover:text-soft-text">
+                support@skipos.co.uk
+              </a>
+            </p>
+          )}
         </div>
 
         {/* Delete account */}

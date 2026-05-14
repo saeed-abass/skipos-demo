@@ -330,7 +330,7 @@ function ListRow({
         </div>
       </td>
       <td className="max-w-[160px] truncate px-4 py-3 text-sm text-soft-muted">
-        {skip.notes || <span className="italic">—</span>}
+        {skip.notes || <span className="italic">No notes</span>}
       </td>
       <td className="px-4 py-3 text-sm text-soft-muted">{fmtDate(skip.created_at)}</td>
       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>

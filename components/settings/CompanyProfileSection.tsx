@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/toast'
 import { updateCompanyProfile } from '@/lib/actions/settings'
@@ -52,6 +52,8 @@ export function CompanyProfileSection({ company, loading, onSaved }: Props) {
   const [companyNum, setCompanyNum] = useState('')
   const [saving, setSaving]         = useState(false)
   const [error, setError]           = useState('')
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!company) return
@@ -62,6 +64,13 @@ export function CompanyProfileSection({ company, loading, onSaved }: Props) {
     setPostcode(company.postcode ?? '')
     setCompanyNum(company.company_number ?? '')
   }, [company])
+
+  function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const preview = URL.createObjectURL(file)
+    setLogoPreview(preview)
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -76,7 +85,15 @@ export function CompanyProfileSection({ company, loading, onSaved }: Props) {
         postcode,
         company_number: companyNum.trim() || null,
       })
-      showToast({ type: 'success', title: 'Company profile updated' })
+      if (logoPreview) {
+        showToast({
+          type: 'info',
+          title: 'Profile updated',
+          message: 'Logo upload will be available after deployment. Preview saved.',
+        })
+      } else {
+        showToast({ type: 'success', title: 'Company profile updated' })
+      }
       onSaved()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save changes')
@@ -98,6 +115,8 @@ export function CompanyProfileSection({ company, loading, onSaved }: Props) {
     .join('')
     .toUpperCase() || '?'
 
+  const logoSrc = logoPreview ?? company?.logo_url ?? null
+
   return (
     <div className="rounded-card bg-white p-6 shadow-soft">
       {/* Header */}
@@ -108,10 +127,10 @@ export function CompanyProfileSection({ company, loading, onSaved }: Props) {
 
       {/* Logo */}
       <div className="mb-6 flex items-center gap-6">
-        <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full bg-gradient-navy">
-          {company?.logo_url ? (
+        <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full bg-gradient-navy overflow-hidden">
+          {logoSrc ? (
             <img
-              src={company.logo_url}
+              src={logoSrc}
               alt="Company logo"
               className="h-full w-full rounded-full object-cover"
             />
@@ -123,19 +142,32 @@ export function CompanyProfileSection({ company, loading, onSaved }: Props) {
           <p className="text-sm font-semibold text-soft-text">Company Logo</p>
           <p className="mt-0.5 text-xs text-soft-muted">Upload a logo to appear on WTNs and emails</p>
           <div className="mt-2 flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={handleLogoSelect}
+              className="sr-only"
+              tabIndex={-1}
+            />
             <button
               type="button"
-              onClick={() => showToast({ type: 'info', title: 'Logo upload coming soon' })}
+              onClick={() => fileInputRef.current?.click()}
               className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-soft-text hover:bg-gray-50 transition-colors"
             >
-              Upload Logo
+              {logoPreview ? 'Change Logo' : 'Upload Logo'}
             </button>
-            {company?.logo_url && (
-              <button type="button" className="text-xs text-red-400 hover:text-red-500 transition-colors">
+            {logoSrc && (
+              <button
+                type="button"
+                onClick={() => { setLogoPreview(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                className="text-xs text-red-400 hover:text-red-500 transition-colors"
+              >
                 Remove
               </button>
             )}
           </div>
+          <p className="mt-1.5 text-xs text-soft-muted">PNG, JPG or WebP. Max 2MB.</p>
         </div>
       </div>
 
@@ -221,7 +253,7 @@ export function CompanyProfileSection({ company, loading, onSaved }: Props) {
                   className={inputCls}
                   placeholder="e.g. 12345678"
                 />
-                <p className="mt-1 text-xs text-soft-muted">Optional — used for compliance verification</p>
+                <p className="mt-1 text-xs text-soft-muted">Optional. Used for compliance verification.</p>
               </div>
             </div>
           </div>

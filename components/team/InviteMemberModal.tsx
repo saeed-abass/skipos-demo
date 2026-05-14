@@ -99,7 +99,6 @@ interface InviteMemberModalProps {
   open: boolean
   onClose: () => void
   onSuccess: () => void
-  companyId: string
 }
 
 type FormState = { name: string; email: string; role: Role }
@@ -119,7 +118,6 @@ export function InviteMemberModal({
   open,
   onClose,
   onSuccess,
-  companyId,
 }: InviteMemberModalProps) {
   const { showToast } = useToast()
   const [form, setForm] = useState<FormState>(INITIAL)
@@ -176,7 +174,6 @@ export function InviteMemberModal({
     setServerError('')
     try {
       const result = await inviteTeamMember({
-        companyId,
         email: form.email.trim(),
         name: form.name.trim(),
         role: form.role,

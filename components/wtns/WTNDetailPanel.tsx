@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 import { JOB_TYPE_LABELS, SKIP_SIZE_LABELS, WTN_STATUS_LABELS, type WTNStatus } from '@/types'
 import { WTNStatusBadge } from './WTNStatusBadge'
 import { updateWTNStatus, type WTNDetail } from '@/lib/actions/wtns'
-import { useToast } from '@/components/ui/toast'
 
 // ─────────────────────────────────────────────────────────
 // Helpers
@@ -31,7 +30,7 @@ function Row({ label, value, className }: { label: string; value: React.ReactNod
   return (
     <div className={cn('flex items-start gap-2 py-2', className)}>
       <span className="w-32 flex-shrink-0 text-xs font-semibold text-soft-muted">{label}</span>
-      <span className="min-w-0 flex-1 text-sm text-soft-text">{value || <span className="text-soft-muted/60 italic">—</span>}</span>
+      <span className="min-w-0 flex-1 text-sm text-soft-text">{value || <span className="text-soft-muted/60 italic">Not set</span>}</span>
     </div>
   )
 }
@@ -121,6 +120,27 @@ function StatusTimeline({ status }: { status: WTNStatus }) {
 // Footer actions
 // ─────────────────────────────────────────────────────────
 
+function PdfButton({ onClick }: { onClick: () => void }) {
+  const base = 'w-full rounded-btn px-4 py-2.5 text-[0.7rem] font-bold uppercase tracking-[0.025em] transition-all border border-gray-200 bg-white text-soft-text shadow-soft hover:bg-gray-50'
+  return (
+    <button onClick={onClick} className={cn(base, 'flex items-center justify-center gap-2')}>
+      Download PDF
+      <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase text-orange-600">
+        Beta
+      </span>
+    </button>
+  )
+}
+
+function PdfInfoBanner() {
+  return (
+    <div className="rounded-btn border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
+      PDF export is in active development and will be available in the next update. Your WTN data
+      is fully saved.
+    </div>
+  )
+}
+
 function FooterActions({
   wtn,
   onStatusChange,
@@ -128,8 +148,8 @@ function FooterActions({
   wtn: WTNDetail
   onStatusChange: (status: WTNStatus) => void
 }) {
-  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [showPdfInfo, setShowPdfInfo] = useState(false)
 
   async function transition(status: WTNStatus) {
     setLoading(true)
@@ -175,18 +195,14 @@ function FooterActions({
   if (wtn.status === 'SIGNED') {
     return (
       <div className="space-y-2">
-        {btn('Submit to Environment Agency', () => {
-          transition('SUBMITTED').then(() => {
-            showToast({
-              type: 'info',
-              title: 'Submitted',
-              message: 'In production this will connect directly to the EA digital service.',
-            })
-          })
-        })}
+        {btn('Submit to Environment Agency', () => transition('SUBMITTED'))}
         {btn('Back to Draft', () => transition('DRAFT'), 'ghost')}
         <p className="text-center text-xs italic text-soft-muted">
           Submitting will lock this WTN from further edits
+        </p>
+        <p className="text-center text-xs italic text-soft-muted">
+          Direct EA API integration launches October 2026. Your WTN is recorded and stored
+          compliantly in the meantime.
         </p>
       </div>
     )
@@ -196,9 +212,8 @@ function FooterActions({
     return (
       <div className="space-y-2">
         {btn('Awaiting EA Response', () => {}, 'disabled')}
-        {btn('Download PDF', () =>
-          showToast({ type: 'info', title: 'Coming soon', message: 'PDF export coming in the next update' }),
-        'secondary')}
+        <PdfButton onClick={() => setShowPdfInfo(v => !v)} />
+        {showPdfInfo && <PdfInfoBanner />}
       </div>
     )
   }
@@ -209,9 +224,8 @@ function FooterActions({
         <div className="rounded-btn bg-green-50 px-4 py-3 text-center text-xs font-semibold text-green-700">
           ✓ This WTN has been accepted by the Environment Agency
         </div>
-        {btn('Download PDF', () =>
-          showToast({ type: 'info', title: 'Coming soon', message: 'PDF export coming in the next update' }),
-        'secondary')}
+        <PdfButton onClick={() => setShowPdfInfo(v => !v)} />
+        {showPdfInfo && <PdfInfoBanner />}
       </div>
     )
   }
@@ -220,7 +234,7 @@ function FooterActions({
     return (
       <div className="space-y-2">
         <div className="rounded-btn bg-red-50 px-4 py-3 text-center text-xs font-semibold text-red-600">
-          Rejected — see notes for reason
+          Rejected. See notes for reason.
         </div>
         {btn('Resubmit', () => transition('SUBMITTED'))}
         {btn('Back to Draft to Edit', () => transition('DRAFT'), 'ghost')}

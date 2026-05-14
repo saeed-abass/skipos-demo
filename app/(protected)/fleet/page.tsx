@@ -16,7 +16,6 @@ import { SkipDetailPanel } from '@/components/fleet/SkipDetailPanel'
 import { useToast } from '@/components/ui/toast'
 import type { SkipSize, SkipStatus, Condition } from '@/types'
 
-const DEMO_COMPANY_ID = 'demo-company'
 const VIEW_KEY = 'skipos_fleet_view'
 
 // ─────────────────────────────────────────────────────────
@@ -116,13 +115,13 @@ export default function FleetPage() {
     setLoading(true)
     try {
       const [data, fleetStats] = await Promise.all([
-        getSkips(DEMO_COMPANY_ID, {
+        getSkips({
           status:    (filters.status    as SkipStatus)  || undefined,
           size:      (filters.size      as SkipSize)    || undefined,
           condition: (filters.condition as Condition)   || undefined,
           search:    filters.search || undefined,
         }),
-        getFleetStats(DEMO_COMPANY_ID),
+        getFleetStats(),
       ])
       setSkips(data)
       setStats(fleetStats)
@@ -304,7 +303,6 @@ export default function FleetPage() {
           setShowAddModal(false)
           loadFleet()
         }}
-        companyId={DEMO_COMPANY_ID}
       />
 
     </PageWrapper>

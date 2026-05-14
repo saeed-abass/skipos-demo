@@ -80,6 +80,7 @@ export interface Job {
   customer_id: string
   driver_id: string | null
   skip_id: string | null
+  job_number: string | null
   job_type: JobType
   status: JobStatus
   skip_size: SkipSize
@@ -204,8 +205,3 @@ export const WTN_STATUS_LABELS: Record<WTNStatus, string> = {
   REJECTED:  'Rejected',
 }
 
-export const WTN_UNIT_LABELS: Record<string, string> = {
-  TONNES:       'Tonnes',
-  CUBIC_METRES: 'Cubic Metres',
-  KILOGRAMS:    'Kilograms',
-}

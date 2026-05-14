@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { getCompanyId } from '@/lib/actions/utils'
 import type { SkipSize, SkipStatus, Condition } from '@/types'
 import type { Prisma } from '@prisma/client'
 
@@ -46,16 +47,14 @@ function generateSkipNumber(): string {
 // Queries
 // ─────────────────────────────────────────────────────────
 
-export async function getSkips(
-  companyId: string,
-  filters?: {
-    status?: SkipStatus
-    size?: SkipSize
-    condition?: Condition
-    search?: string
-  }
-): Promise<SkipRow[]> {
+export async function getSkips(filters?: {
+  status?: SkipStatus
+  size?: SkipSize
+  condition?: Condition
+  search?: string
+}): Promise<SkipRow[]> {
   try {
+    const companyId = await getCompanyId()
     const rows = await prisma.skip.findMany({
       where: {
         company_id: companyId,
@@ -77,7 +76,8 @@ export async function getSkips(
   }
 }
 
-export async function getFleetStats(companyId: string): Promise<FleetStats> {
+export async function getFleetStats(): Promise<FleetStats> {
+  const companyId = await getCompanyId()
   const [total, inYard, onSite, atTip, good, fair, poor] = await Promise.all([
     prisma.skip.count({ where: { company_id: companyId } }),
     prisma.skip.count({ where: { company_id: companyId, status: 'IN_YARD' } }),
@@ -98,16 +98,16 @@ export async function getFleetStats(companyId: string): Promise<FleetStats> {
 // ─────────────────────────────────────────────────────────
 
 export async function createSkip(data: {
-  companyId: string
   size: SkipSize
   condition: Condition
   serialNumber?: string
   notes?: string
 }): Promise<SkipRow> {
+  const companyId = await getCompanyId()
   const skipNumber = data.serialNumber?.trim() || generateSkipNumber()
   return prisma.skip.create({
     data: {
-      company_id:  data.companyId,
+      company_id:  companyId,
       skip_number: skipNumber,
       size:        data.size,
       condition:   data.condition,

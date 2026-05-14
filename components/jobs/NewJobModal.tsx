@@ -39,6 +39,8 @@ type FormState = {
   delivery_postcode: string
   driver_id: string
   notes: string
+  price: string
+  permit_required: boolean
 }
 
 type FormErrors = Partial<Record<keyof FormState, string>>
@@ -52,6 +54,8 @@ const INITIAL_FORM: FormState = {
   delivery_postcode: '',
   driver_id: '',
   notes: '',
+  price: '',
+  permit_required: false,
 }
 
 function validate(form: FormState): FormErrors {
@@ -189,9 +193,9 @@ export function NewJobModal({ open, onClose, onSuccess }: NewJobModalProps) {
     return () => document.removeEventListener('keydown', handler)
   }, [open, hasChanges, onClose])
 
-  function set(key: keyof FormState, value: string) {
+  function set(key: keyof FormState, value: string | boolean) {
     setForm(prev => ({ ...prev, [key]: value }))
-    if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }))
+    if (errors[key as keyof FormErrors]) setErrors(prev => ({ ...prev, [key]: undefined }))
     setHasChanges(true)
   }
 
@@ -229,8 +233,10 @@ export function NewJobModal({ open, onClose, onSuccess }: NewJobModalProps) {
         scheduled_date: form.scheduled_date ? new Date(form.scheduled_date) : null,
         driver_id: form.driver_id || null,
         notes: form.notes || null,
+        price: form.price ? parseFloat(form.price) : null,
+        permit_required: form.permit_required,
       })
-      const ref = `JOB-${job.id.slice(-6).toUpperCase()}`
+      const ref = job.job_number ?? `JOB-${job.id.slice(-6).toUpperCase()}`
       setSuccessJobRef(ref)
       showToast({
         type: 'success',
@@ -395,6 +401,35 @@ export function NewJobModal({ open, onClose, onSuccess }: NewJobModalProps) {
                       <option key={d.id} value={d.id}>{d.full_name}</option>
                     ))}
                   </select>
+                </Field>
+
+                {/* Price */}
+                <Field label="Price (optional)">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-soft-muted">£</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.price}
+                      onChange={e => set('price', e.target.value)}
+                      placeholder="0.00"
+                      className={cn(inputClass, 'pl-7')}
+                    />
+                  </div>
+                </Field>
+
+                {/* Permit Required */}
+                <Field label="Permit Required">
+                  <label className="flex cursor-pointer items-center gap-3 rounded-btn border border-gray-200 bg-white px-3 py-2.5 shadow-inset">
+                    <input
+                      type="checkbox"
+                      checked={form.permit_required}
+                      onChange={e => set('permit_required', e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-400"
+                    />
+                    <span className="text-sm text-soft-text">This job requires a skip permit</span>
+                  </label>
                 </Field>
 
                 {/* Notes — full width */}

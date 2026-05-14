@@ -108,6 +108,9 @@ export async function createWTN(data: {
   collectionAddress: string
   collectionPostcode: string
   disposalSiteName?: string
+  disposalSiteAddress?: string
+  consigneeName?: string
+  consigneeAddress?: string
   carrierName: string
   carrierEaNumber?: string
   transferDate: string
@@ -126,9 +129,12 @@ export async function createWTN(data: {
       container_type:       'Skip',
       collection_address:   data.collectionAddress,
       collection_postcode:  data.collectionPostcode,
-      disposal_site_name:   data.disposalSiteName   || null,
+      disposal_site_name:   data.disposalSiteName    || null,
+      disposal_site_address: data.disposalSiteAddress || null,
+      consignee_name:       data.consigneeName       || null,
+      consignee_address:    data.consigneeAddress    || null,
       carrier_name:         data.carrierName,
-      carrier_ea_number:    data.carrierEaNumber    || '',
+      carrier_ea_number:    data.carrierEaNumber     || '',
       transfer_date:        new Date(data.transferDate),
       status:               'DRAFT',
     },

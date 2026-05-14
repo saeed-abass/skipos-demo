@@ -232,7 +232,7 @@ export function JobsTable({ jobs, loading, onNewJob, onStatusUpdate }: JobsTable
                   {/* Job # */}
                   <td className="px-6 py-4">
                     <span className="font-mono text-xs font-semibold text-soft-text">
-                      {jobRef(job.id)}
+                      {job.job_number ?? jobRef(job.id)}
                     </span>
                   </td>
 

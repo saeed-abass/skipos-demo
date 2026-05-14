@@ -63,6 +63,8 @@ interface StatCardProps {
   value: string | number
   change?: string
   changeType?: 'up' | 'down' | 'neutral'
+  changeSuffix?: string
+  changeNode?: React.ReactNode
   icon: React.ReactNode
   iconGradient?: IconGradient
 }
@@ -79,6 +81,8 @@ export function StatCard({
   value,
   change,
   changeType = 'neutral',
+  changeSuffix = 'Since last month',
+  changeNode,
   icon,
   iconGradient = 'orange',
 }: StatCardProps) {
@@ -104,21 +108,27 @@ export function StatCard({
 
       {/* Footer row */}
       <div className="flex items-center gap-1.5 border-t border-gray-100 px-4 py-2.5">
-        {change && (
-          <span
-            className={cn(
-              'text-xs font-semibold',
-              changeType === 'up'
-                ? 'text-green-500'
-                : changeType === 'down'
-                ? 'text-red-500'
-                : 'text-soft-muted'
+        {changeNode ? (
+          changeNode
+        ) : (
+          <>
+            {change && (
+              <span
+                className={cn(
+                  'text-xs font-semibold',
+                  changeType === 'up'
+                    ? 'text-green-500'
+                    : changeType === 'down'
+                    ? 'text-red-500'
+                    : 'text-soft-muted'
+                )}
+              >
+                {change}
+              </span>
             )}
-          >
-            {change}
-          </span>
+            {changeSuffix && <span className="text-xs text-soft-muted">{changeSuffix}</span>}
+          </>
         )}
-        <span className="text-xs text-soft-muted">Since last month</span>
       </div>
     </div>
   )

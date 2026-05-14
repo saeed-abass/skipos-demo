@@ -84,7 +84,6 @@ interface AddSkipModalProps {
   open: boolean
   onClose: () => void
   onSuccess: () => void
-  companyId: string
 }
 
 type FormState = {
@@ -103,7 +102,7 @@ const INITIAL: FormState = {
   notes: '',
 }
 
-export function AddSkipModal({ open, onClose, onSuccess, companyId }: AddSkipModalProps) {
+export function AddSkipModal({ open, onClose, onSuccess }: AddSkipModalProps) {
   const { showToast } = useToast()
   const [form, setForm] = useState<FormState>(INITIAL)
   const [errors, setErrors] = useState<FormErrors>({})
@@ -159,7 +158,6 @@ export function AddSkipModal({ open, onClose, onSuccess, companyId }: AddSkipMod
     setServerError('')
     try {
       await createSkip({
-        companyId,
         size: form.size,
         condition: form.condition,
         serialNumber: form.serialNumber || undefined,

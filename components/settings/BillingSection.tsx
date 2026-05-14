@@ -1,15 +1,19 @@
 'use client'
 
-import { useToast } from '@/components/ui/toast'
+import { useEffect, useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+import { cn } from '@/lib/utils'
+
+const WAITLIST_KEY = 'skipos_waitlist_emails'
 
 const STARTER_FEATURES = [
-  { label: 'Up to 5 team members',          included: true },
-  { label: 'Unlimited jobs and customers',   included: true },
-  { label: 'Digital WTN creation',           included: true },
-  { label: 'DEFRA compliance tracking',      included: true },
+  { label: 'Up to 5 team members',              included: true },
+  { label: 'Unlimited jobs and customers',       included: true },
+  { label: 'Digital WTN creation',              included: true },
+  { label: 'DEFRA compliance tracking',         included: true },
   { label: 'EA direct submission (Coming soon)', included: false },
-  { label: 'Multi-depot support (Pro plan)', included: false },
-  { label: 'API access (Pro plan)',          included: false },
+  { label: 'Multi-depot support (Pro plan)',    included: false },
+  { label: 'API access (Pro plan)',             included: false },
 ]
 
 const PRO_FEATURES = [
@@ -26,8 +30,100 @@ const ENTERPRISE_FEATURES = [
   'Custom integrations',
 ]
 
+function WaitlistForm({
+  email,
+  onEmailChange,
+  onSubmit,
+  submitted,
+}: {
+  email: string
+  onEmailChange: (v: string) => void
+  onSubmit: () => void
+  submitted: boolean
+}) {
+  if (submitted) {
+    return (
+      <p className="mt-3 text-xs font-medium text-green-600">
+        You are on the list. We will be in touch when Pro launches.
+      </p>
+    )
+  }
+  return (
+    <div className="mt-3">
+      <p className="mb-2 text-xs text-soft-muted">Join the waitlist for early access</p>
+      <div className="flex gap-2">
+        <input
+          type="email"
+          value={email}
+          onChange={e => onEmailChange(e.target.value)}
+          placeholder="your@email.com"
+          className="flex-1 rounded-btn border border-gray-200 px-2.5 py-1.5 text-xs text-soft-text placeholder-gray-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100 transition-colors"
+        />
+        <button
+          type="button"
+          onClick={onSubmit}
+          className="rounded-btn bg-gradient-orange px-3 py-1.5 text-xs font-bold text-white transition-all hover:shadow-md"
+        >
+          Notify Me
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function BillingSection() {
-  const { showToast } = useToast()
+  const [userEmail, setUserEmail]         = useState('')
+  const [showUpgradeForm, setShowUpgradeForm] = useState(false)
+  const [showProForm, setShowProForm]     = useState(false)
+  const [upgradeEmail, setUpgradeEmail]   = useState('')
+  const [proEmail, setProEmail]           = useState('')
+  const [upgradeSubmitted, setUpgradeSubmitted] = useState(false)
+  const [proSubmitted, setProSubmitted]   = useState(false)
+
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    )
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.email) {
+        setUserEmail(user.email)
+        setUpgradeEmail(user.email)
+        setProEmail(user.email)
+      }
+    })
+  }, [])
+
+  function saveToWaitlist(email: string) {
+    try {
+      const existing = JSON.parse(localStorage.getItem(WAITLIST_KEY) ?? '[]') as string[]
+      if (!existing.includes(email)) {
+        localStorage.setItem(WAITLIST_KEY, JSON.stringify([...existing, email]))
+      }
+    } catch { /* ignore */ }
+  }
+
+  function handleUpgradeOpen() {
+    setUpgradeEmail(userEmail)
+    setUpgradeSubmitted(false)
+    setShowUpgradeForm(v => !v)
+  }
+
+  function handleProOpen() {
+    setProEmail(userEmail)
+    setProSubmitted(false)
+    setShowProForm(v => !v)
+  }
+
+  function submitUpgrade() {
+    if (upgradeEmail) saveToWaitlist(upgradeEmail)
+    setUpgradeSubmitted(true)
+  }
+
+  function submitPro() {
+    if (proEmail) saveToWaitlist(proEmail)
+    setProSubmitted(true)
+  }
 
   return (
     <div className="rounded-card bg-white p-6 shadow-soft">
@@ -56,19 +152,26 @@ export function BillingSection() {
             </li>
           ))}
         </ul>
+
         <button
           type="button"
-          onClick={() =>
-            showToast({
-              type: 'info',
-              title: 'Pro plan coming soon',
-              message: 'Contact hello@skipos.co.uk to join the waitlist.',
-            })
-          }
+          onClick={handleUpgradeOpen}
           className="mt-4 rounded-btn bg-orange-500 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-600"
         >
           Upgrade to Pro
         </button>
+
+        <div className={cn(
+          'overflow-hidden transition-[max-height] duration-200 ease-in-out',
+          showUpgradeForm ? 'max-h-40' : 'max-h-0',
+        )}>
+          <WaitlistForm
+            email={upgradeEmail}
+            onEmailChange={setUpgradeEmail}
+            onSubmit={submitUpgrade}
+            submitted={upgradeSubmitted}
+          />
+        </div>
       </div>
 
       {/* Upcoming plans */}
@@ -90,17 +193,22 @@ export function BillingSection() {
             </ul>
             <button
               type="button"
-              onClick={() =>
-                showToast({
-                  type: 'info',
-                  title: 'Added to waitlist',
-                  message: 'We will be in touch soon.',
-                })
-              }
+              onClick={handleProOpen}
               className="mt-4 w-full rounded-btn border-2 border-orange-300 px-4 py-2 text-sm font-bold text-orange-500 transition-colors hover:bg-orange-50"
             >
               Join Waitlist
             </button>
+            <div className={cn(
+              'overflow-hidden transition-[max-height] duration-200 ease-in-out',
+              showProForm ? 'max-h-40' : 'max-h-0',
+            )}>
+              <WaitlistForm
+                email={proEmail}
+                onEmailChange={setProEmail}
+                onSubmit={submitPro}
+                submitted={proSubmitted}
+              />
+            </div>
           </div>
 
           {/* Enterprise */}

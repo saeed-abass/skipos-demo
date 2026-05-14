@@ -14,6 +14,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/lib/actions/auth'
 import { useToast } from '@/components/ui/toast'
+import { InviteMemberModal } from '@/components/team/InviteMemberModal'
 
 // ─────────────────────────────────────────────────────────
 // Context
@@ -159,6 +160,7 @@ function UserFooter() {
   const [loading, setLoading] = useState(true)
   const [companyName, setCompanyName] = useState<string | null>(null)
   const [email, setEmail] = useState<string | null>(null)
+  const [showInviteModal, setShowInviteModal] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -226,6 +228,14 @@ function UserFooter() {
 
   return (
     <div ref={containerRef} className="relative flex-shrink-0 border-t border-gray-100 p-3">
+      <InviteMemberModal
+        open={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        onSuccess={() => {
+          setShowInviteModal(false)
+          showToast({ type: 'success', title: 'Invite sent', message: 'Team member has been invited' })
+        }}
+      />
 
       {/* ── Popup menu ──────────────────────────────── */}
       {menuOpen && (
@@ -245,7 +255,7 @@ function UserFooter() {
           {/* Items */}
           <div className="py-1">
             <button
-              onClick={() => navigate('/team')}
+              onClick={() => { setMenuOpen(false); setShowInviteModal(true) }}
               className="flex w-full items-center gap-3 px-3 py-2 text-sm text-soft-text hover:bg-gray-50 transition-colors"
             >
               <MenuIcon d={ICONS.userPlus} className="text-soft-muted" />

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { JOB_TYPE_LABELS, SKIP_SIZE_LABELS, type WTNStatus } from '@/types'
 import { WTNStatusBadge } from './WTNStatusBadge'
-import { useToast } from '@/components/ui/toast'
 import { updateWTNStatus, type WTNRow } from '@/lib/actions/wtns'
 
 const PAGE_SIZE = 20
@@ -88,7 +87,7 @@ interface ActionsMenuProps {
 }
 
 function ActionsMenu({ wtn, isOpen, onToggle, onViewDetails, onStatusChange }: ActionsMenuProps) {
-  const { showToast } = useToast()
+  const [showPdfInfo, setShowPdfInfo] = useState(false)
 
   const transitions: { status: WTNStatus; label: string }[] = []
   if (wtn.status === 'DRAFT')     transitions.push({ status: 'SIGNED',    label: 'Mark as Signed' })
@@ -122,11 +121,20 @@ function ActionsMenu({ wtn, isOpen, onToggle, onViewDetails, onStatusChange }: A
             View details
           </button>
           <button
-            onClick={() => showToast({ type: 'info', title: 'Coming soon', message: 'PDF export coming in the next update' })}
-            className="flex w-full items-center px-4 py-2 text-sm text-soft-text hover:bg-gray-50 transition-colors"
+            onClick={() => setShowPdfInfo(v => !v)}
+            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-soft-text hover:bg-gray-50 transition-colors"
           >
             Download PDF
+            <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase text-orange-600">
+              Beta
+            </span>
           </button>
+          {showPdfInfo && (
+            <div className="mx-2 mb-1 rounded-btn border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
+              PDF export is in active development and will be available in the next update. Your WTN
+              data is fully saved.
+            </div>
+          )}
 
           {transitions.length > 0 && (
             <>

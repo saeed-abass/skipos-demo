@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
+import { getCompanyId } from '@/lib/actions/utils'
 import type { Prisma } from '@prisma/client'
 import type { Role } from '@/types'
 
@@ -45,12 +46,12 @@ export type UserWithJobs = Prisma.UserGetPayload<{
 // Queries
 // ─────────────────────────────────────────────────────────
 
-export async function getTeamMembers(
-  companyId: string
-): Promise<{ members: UserWithJobCount[]; currentUserId: string }> {
+export async function getTeamMembers(): Promise<{ members: UserWithJobCount[]; currentUserId: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user?.email) return { members: [], currentUserId: '' }
+
+  const companyId = user.id
 
   // Ensure the logged-in user has a record in the users table
   try {
@@ -107,20 +108,21 @@ export async function getMemberById(id: string) {
 // ─────────────────────────────────────────────────────────
 
 export async function inviteTeamMember(data: {
-  companyId: string
   email: string
   name: string
   role: Role
 }) {
+  const companyId = await getCompanyId()
+
   const existing = await prisma.user.findFirst({
-    where: { email: data.email, company_id: data.companyId },
+    where: { email: data.email, company_id: companyId },
   })
   if (existing) return { error: 'This email is already a member of your team.' }
 
   const { data: inviteData, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(
     data.email,
     {
-      data: { companyId: data.companyId, name: data.name, role: data.role },
+      data: { companyId, name: data.name, role: data.role },
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/update-password`,
     }
   )
@@ -129,7 +131,7 @@ export async function inviteTeamMember(data: {
   await prisma.user.create({
     data: {
       id: inviteData.user.id,
-      company_id: data.companyId,
+      company_id: companyId,
       email: data.email,
       full_name: data.name,
       role: data.role,
@@ -171,4 +173,3 @@ export async function removeMember(userId: string) {
 
   return {}
 }
-
