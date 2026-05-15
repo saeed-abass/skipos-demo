@@ -149,6 +149,12 @@ function initials(name: string): string {
   return name.slice(0, 2).toUpperCase()
 }
 
+function emailFallbackName(e: string): string {
+  const local = e.split('@')[0]
+  const first = local.split('.')[0]
+  return first.charAt(0).toUpperCase() + first.slice(1)
+}
+
 // ─────────────────────────────────────────────────────────
 // User / account footer
 // ─────────────────────────────────────────────────────────
@@ -208,13 +214,6 @@ function UserFooter() {
   function navigate(href: string) {
     setMenuOpen(false)
     router.push(href)
-  }
-
-  // Derive display values
-  function emailFallbackName(e: string): string {
-    const local = e.split('@')[0]
-    const first = local.split('.')[0]
-    return first.charAt(0).toUpperCase() + first.slice(1)
   }
 
   const avatarText = companyName
@@ -345,6 +344,37 @@ function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
   const [showDrawer, setShowDrawer] = useState(false)
+  const [companyName, setCompanyName] = useState<string | null>(null)
+  const [email, setEmail] = useState<string | null>(null)
+  const [loadingUser, setLoadingUser] = useState(true)
+
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { setLoadingUser(false); return }
+      setEmail(user.email ?? null)
+      supabase
+        .from('companies')
+        .select('name')
+        .eq('email', user.email)
+        .single()
+        .then(({ data }) => {
+          if (data?.name) setCompanyName(data.name)
+          setLoadingUser(false)
+        })
+    })
+  }, [])
+
+  const avatarText = companyName
+    ? initials(companyName)
+    : email
+    ? email.slice(0, 2).toUpperCase()
+    : '??'
+
+  const primaryLabel = companyName || (email ? emailFallbackName(email) : '')
 
   const drawerItems = [
     { label: 'Team',     href: '/team',     icon: ICONS.team },
@@ -371,6 +401,32 @@ function BottomNav() {
       )}>
         <div className="mx-auto my-2 h-1 w-10 rounded-full bg-gray-200" />
         <div className="px-4 pb-6 pt-2">
+
+          {/* Account header */}
+          <div className="mb-2 flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-navy text-sm font-bold text-white">
+              {loadingUser
+                ? <span className="h-4 w-4 animate-pulse rounded-full bg-white/40" />
+                : avatarText}
+            </div>
+            <div className="min-w-0 flex-1">
+              {loadingUser ? (
+                <>
+                  <div className="mb-1.5 h-3.5 w-28 animate-pulse rounded bg-gray-200" />
+                  <div className="h-3 w-20 animate-pulse rounded bg-gray-100" />
+                </>
+              ) : (
+                <>
+                  <p className="truncate text-sm font-semibold text-soft-text">{primaryLabel}</p>
+                  <p className="truncate text-xs text-soft-muted">{email}</p>
+                  <span className="mt-1 inline-block rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-600">
+                    Admin
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
           <p className="mb-2 text-[0.6rem] font-bold uppercase tracking-widest text-soft-muted">
             More
           </p>
