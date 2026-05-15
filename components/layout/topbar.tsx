@@ -403,12 +403,12 @@ export function Topbar() {
         </div>
 
         {/* ── Right: actions ─────────────────────────── */}
-        <div className="flex flex-shrink-0 items-center gap-1 lg:gap-2">
+        <div className="flex flex-shrink-0 items-center gap-3 lg:gap-2">
 
           {/* Mobile search icon */}
           <button
             onClick={() => setMobileSearchOpen(true)}
-            className="rounded-lg p-2 text-soft-muted hover:bg-gray-100 hover:text-soft-text transition-colors lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-soft-muted hover:bg-gray-100 hover:text-soft-text transition-colors lg:hidden"
             aria-label="Search"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
@@ -468,7 +468,7 @@ export function Topbar() {
             <button
               onClick={() => togglePanel('bell')}
               className={cn(
-                'relative rounded-lg p-2 transition-colors lg:p-2.5',
+                'relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors lg:h-auto lg:w-auto lg:p-2.5',
                 openPanel === 'bell'
                   ? 'bg-gray-100 text-soft-text'
                   : 'text-soft-muted hover:bg-gray-100 hover:text-soft-text'

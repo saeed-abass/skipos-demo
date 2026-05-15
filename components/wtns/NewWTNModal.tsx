@@ -484,7 +484,7 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
           {/* Footer */}
           {!successWTN && (
             confirmDiscard ? (
-              <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+              <div className="flex-shrink-0 flex items-center justify-between border-t border-gray-100 px-6 py-4">
                 <p className="text-sm font-semibold text-soft-text">You have unsaved changes.</p>
                 <div className="flex items-center gap-3">
                   <button
@@ -502,7 +502,7 @@ export function NewWTNModal({ open, onClose, onSuccess }: NewWTNModalProps) {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+              <div className="flex-shrink-0 flex items-center justify-between border-t border-gray-100 px-6 py-4">
                 <p className="flex items-center gap-1.5 text-xs italic text-soft-muted">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 flex-shrink-0 text-soft-muted/70">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />

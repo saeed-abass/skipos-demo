@@ -268,7 +268,7 @@ export function NewCustomerModal({
           {/* Footer */}
           {!successName && (
             confirmDiscard ? (
-              <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+              <div className="flex-shrink-0 flex items-center justify-between border-t border-gray-100 px-6 py-4">
                 <p className="text-sm font-semibold text-soft-text">You have unsaved changes.</p>
                 <div className="flex items-center gap-3">
                   <button
@@ -286,7 +286,7 @@ export function NewCustomerModal({
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+              <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
                 <button
                   onClick={() => { hasChanges ? setConfirmDiscard(true) : onClose() }}
                   disabled={submitting}

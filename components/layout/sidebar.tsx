@@ -262,10 +262,7 @@ function UserFooter() {
               Invite Team Member
             </button>
             <button
-              onClick={() => {
-                setMenuOpen(false)
-                showToast({ type: 'info', title: 'Coming soon', message: 'Billing is not yet available' })
-              }}
+              onClick={() => navigate('/settings')}
               className="flex w-full items-center gap-3 px-3 py-2 text-sm text-soft-text hover:bg-gray-50 transition-colors"
             >
               <MenuIcon d={ICONS.creditCard} className="text-soft-muted" />
@@ -347,7 +344,6 @@ const BOTTOM_NAV = [
 function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
-  const { showToast } = useToast()
   const [showDrawer, setShowDrawer] = useState(false)
 
   const drawerItems = [
@@ -398,10 +394,7 @@ function BottomNav() {
           <div className="my-3 border-t border-gray-100" />
 
           <button
-            onClick={() => {
-              setShowDrawer(false)
-              showToast({ type: 'info', title: 'Coming soon', message: 'Billing is not yet available' })
-            }}
+            onClick={() => { setShowDrawer(false); router.push('/settings') }}
             className="flex w-full items-center gap-4 rounded-xl px-4 py-3 text-sm font-medium text-soft-text hover:bg-gray-50 transition-colors"
           >
             <MenuIcon d={ICONS.creditCard} className="h-5 w-5 text-soft-muted" />

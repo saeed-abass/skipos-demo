@@ -55,7 +55,17 @@ export default function AuthLayout({
       </div>
 
       {/* ── Right panel — form ────────────────────────── */}
-      <div className="flex flex-1 items-center justify-center bg-soft-bg px-4 py-12 lg:px-8">
+      <div className="flex flex-1 flex-col bg-soft-bg px-4 py-8 lg:items-center lg:justify-center lg:px-8">
+        {/* Mobile-only logo header */}
+        <div className="mb-6 flex flex-col items-center lg:hidden">
+          <div className="flex items-center gap-3">
+            <img src="/logo.svg" alt="SkipOS" className="h-10 w-10" />
+            <span className="text-2xl font-bold text-soft-text">
+              Skip<span className="text-orange-500">OS</span>
+            </span>
+          </div>
+          <p className="mt-2 text-sm text-soft-muted">The operating system for skip hire</p>
+        </div>
         {children}
       </div>
     </div>

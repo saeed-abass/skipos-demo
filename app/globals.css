@@ -79,3 +79,10 @@ body {
 .animate-loading-bar {
   animation: loading-bar 1.2s ease-in-out infinite;
 }
+
+/* Extra bottom padding on mobile so bottom nav doesn't cover content */
+@media (max-width: 1024px) {
+  .page-content {
+    padding-bottom: 5rem;
+  }
+}
